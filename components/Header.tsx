@@ -57,7 +57,7 @@ export default function Header({
               {/* Brand Text */}
               <div className="hidden sm:block">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-white">Innova</span>
+                  <span className="text-lg font-bold text-white">Impulsa</span>
                   <span className="text-lg font-bold text-[#FFB3B3]">Tarija</span>
                 </div>
                 <p className="text-xs text-white/70 font-medium">Municipio de Tarija</p>
