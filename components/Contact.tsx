@@ -7,6 +7,9 @@ export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [phone, setPhone] = useState('')
 
+  const [newsEmail, setNewsEmail] = useState('')
+  const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
   const contactMethods = [
     {
       icon: Phone,
@@ -55,6 +58,26 @@ export default function Contact() {
       setPhone('')
     } catch (error) {
       setStatus('error')
+    }
+  }
+
+  const handleSubscribe = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setNewsStatus('sending')
+
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsEmail }),
+      })
+
+      if (!response.ok) throw new Error('No se pudo suscribir')
+
+      setNewsStatus('sent')
+      setNewsEmail('')
+    } catch (error) {
+      setNewsStatus('error')
     }
   }
 
@@ -225,15 +248,30 @@ export default function Contact() {
 
             <div className="bg-[#F8F1E7] border border-[#D8A7A7] rounded-lg p-6">
               <h4 className="font-bold text-[#1E1E1E] mb-2">Suscríbete a Noticias</h4>
-              <p className="text-sm text-gray-600 mb-4">Recibe actualizaciones sobre nuevas oportunidades e iniciativas</p>
-              <input
-                type="email"
-                className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500 mb-2"
-                placeholder="tu@email.com"
-              />
-              <button className="w-full px-4 py-2 bg-[#5B0F18] text-white font-semibold rounded-lg hover:bg-[#1E1E1E] transition-colors text-sm">
-                Suscribir
-              </button>
+              <p className="text-sm text-gray-600 mb-4">Recibe una notificación cada vez que se publique una noticia o video nuevo</p>
+              <form onSubmit={handleSubscribe} className="space-y-2">
+                <input
+                  type="email"
+                  value={newsEmail}
+                  onChange={(e) => setNewsEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
+                  placeholder="tu@email.com"
+                />
+                <button
+                  type="submit"
+                  disabled={newsStatus === 'sending'}
+                  className="w-full px-4 py-2 bg-[#5B0F18] text-white font-semibold rounded-lg hover:bg-[#1E1E1E] transition-colors text-sm disabled:opacity-60"
+                >
+                  {newsStatus === 'sending' ? 'Suscribiendo...' : 'Suscribir'}
+                </button>
+                {newsStatus === 'sent' && (
+                  <p className="text-sm font-semibold text-green-700">¡Listo! Te avisaremos de las próximas noticias.</p>
+                )}
+                {newsStatus === 'error' && (
+                  <p className="text-sm font-semibold text-red-700">No se pudo suscribir, intenta de nuevo.</p>
+                )}
+              </form>
             </div>
           </div>
         </div>
