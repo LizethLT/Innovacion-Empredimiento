@@ -5,7 +5,7 @@ export interface LibraryDocument {
   type: string
   date: string
   pages: string
-  /** Categoría a la que pertenece el documento (ej: "Leyes", "Reglamentos", "Guías", etc.) */
+  /** Categoría a la que pertenece el documento (ej: "Leyes", "Mesas", "Metodología") */
   category?: string
   /** Coloca el PDF con este mismo nombre dentro de /public/docs/ para que el botón "Descargar" funcione */
   file: string
@@ -33,7 +33,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     type: 'PDF',
     date: '2024',
     pages: '15 páginas',
-    category: 'Reglamentos', // <-- Aquí asignas la categoría
+    category: 'Leyes', // <-- Aquí asignas la categoría
     file: '/docs/reglamento-de-implementacion.pdf',
   },
   {
@@ -43,7 +43,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     type: 'PDF',
     date: '2024',
     pages: '42 páginas',
-    category: 'Leyes', // <-- Puedes repetir la categoría si corresponde
+    category: 'Mesas', // <-- Puedes repetir la categoría si corresponde
     file: '/docs/plan-estrategico-2024-2028.pdf',
   },
   {
@@ -53,7 +53,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     type: 'PDF',
     date: '2024',
     pages: '22 páginas',
-    category: 'Guías', // <-- Aquí asignas la categoría
+    category: 'Metodología', // <-- Aquí asignas la categoría
     file: '/docs/manual-de-procedimientos.pdf',
   },
   {
@@ -63,7 +63,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     type: 'PDF',
     date: '2024',
     pages: '35 páginas',
-    category: 'Reglamentos', // <-- Aquí asignas la categoría
+    category: 'Mesas', // <-- Aquí asignas la categoría
     file: '/docs/informe-de-implementacion.pdf',
   },
   {
@@ -73,7 +73,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     type: 'PDF',
     date: '2024',
     pages: '12 páginas',
-    category: 'Guías', // <-- Aquí asignas la categoría
+    category: 'Mesas', // <-- Aquí asignas la categoría
     file: '/docs/directorio-actores.pdf',
   },
   {
@@ -83,7 +83,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     type: 'PDF',
     date: '2024',
     pages: '18 páginas',
-    category: 'Guías', // <-- Aquí asignas la categoría
+    category: 'Metodología', // <-- Aquí asignas la categoría
     file: '/docs/guia-para-emprendedores.pdf',
   },
   {
@@ -93,7 +93,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     type: 'PDF',
     date: '2024',
     pages: '25 páginas',
-    category: 'Reglamentos', // <-- Aquí asignas la categoría
+    category: 'Metodología', // <-- Aquí asignas la categoría
     file: '/docs/bases-de-convocatorias.pdf',
   },
 ]

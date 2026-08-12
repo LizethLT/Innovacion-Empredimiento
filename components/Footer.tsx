@@ -1,20 +1,23 @@
 'use client'
 
-export default function Footer() {
-  const currentYear = new Date().getFullYear()
+interface FooterProps {
+  sections: Array<{ id: string; label: string }>
+  onNavigate: (id: string) => void
+}
 
-  const sections = [
+export default function Footer({ sections, onNavigate }: FooterProps) {
+  const footerSections = [
     {
       title: 'Secciones',
-      links: ['Inicio', '¿Qué es la Ley?', 'Arquitectura del Ecosistema de Innovación y Emprendimiento'],
+      links: sections.filter((section) => ['inicio', 'ley', 'ecosistema'].includes(section.id)),
     },
     {
       title: 'Recursos',
-      links: ['Videos', 'Biblioteca'],
+      links: sections.filter((section) => ['videos', 'biblioteca'].includes(section.id)),
     },
     {
       title: 'Contacto',
-      links: ['Contacto'],
+      links: sections.filter((section) => section.id === 'contacto'),
     },
   ]
 
@@ -25,25 +28,36 @@ export default function Footer() {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="font-bold text-[#1E1E1E]">TJ</span>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-lg bg-white p-2 overflow-hidden">
+                <img
+                  src="/logo.jpeg"
+                  alt="Logo Impulsa Tarija"
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
               </div>
-              <span className="font-bold">Tarija</span>
+              <span className="font-bold">Impulsa Tarija</span>
             </div>
             <p className="text-sm text-[#F8F1E7]">Ley Municipal de Innovación, Creatividad, Emprendimiento y Economía del Conocimiento</p>
           </div>
 
           {/* Links */}
-          {sections.map((section, index) => (
+          {footerSections.map((section, index) => (
             <div key={index}>
               <h4 className="font-bold mb-4 text-[#F8F1E7]">{section.title}</h4>
               <ul className="space-y-2">
-                {section.links.map((link, idx) => (
-                  <li key={idx}>
-                    <a href="#" className="text-sm text-[#D8A7A7] hover:text-white transition-colors">
-                      {link}
-                    </a>
+                {section.links.map((link) => (
+                  <li key={link.id}>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(link.id)}
+                      className="text-left text-sm text-[#D8A7A7] hover:text-white transition-colors"
+                    >
+                      {link.label}
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -56,14 +70,7 @@ export default function Footer() {
 
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-[#D8A7A7]">
-          <div className="text-center md:text-left mb-4 md:mb-0">
-            <p>&copy; {currentYear} Municipalidad de Tarija. Todos los derechos reservados.</p>
-          </div>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition-colors">Política de Privacidad</a>
-            <a href="#" className="hover:text-white transition-colors">Términos de Uso</a>
-            <a href="#" className="hover:text-white transition-colors">Contacto</a>
-          </div>
+          
         </div>
       </div>
 

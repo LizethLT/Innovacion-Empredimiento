@@ -31,8 +31,8 @@ export default function Library() {
     const keys = Object.keys(counts)
     if (keys.length === 1 && keys[0] === 'General') {
       counts['Leyes'] = 0
-      counts['Reglamentos'] = 0
-      counts['Guías'] = 0
+      counts['Mesas'] = 0
+      counts['Metodología'] = 0
     }
 
     return {

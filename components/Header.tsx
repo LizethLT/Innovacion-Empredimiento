@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Menu, X } from 'lucide-react'
 
 interface HeaderProps {
   mobileMenuOpen: boolean
@@ -18,23 +18,72 @@ export default function Header({
   activeSection,
   setActiveSection,
 }: HeaderProps) {
-  const [contactMenuOpen, setContactMenuOpen] = useState(false)
+  const sectionMenuRef = useRef<HTMLDivElement | null>(null)
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null)
+  const mobilePanelRef = useRef<HTMLDivElement | null>(null)
 
-  const contactInfo = [
-    { label: 'Dirección', value: 'Av. Jaime Paz Zamora Nro. 700, Tarija, Bolivia' },
-    { label: 'Teléfono', value: '+591 4 664 4000' },
-    { label: 'Email', value: 'info@tarija.gob.bo' },
-    { label: 'Horario', value: 'Lunes a Viernes 8:00 - 16:30' },
-  ]
 
   const mobileButtonLabel = mobileMenuOpen ? 'Cerrar menú de secciones' : 'Abrir menú de secciones'
 
   const handleNavClick = (id: string) => {
     setActiveSection(id)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
     setMobileMenuOpen(false)
-    setContactMenuOpen(false)
+
+    if (id === 'contacto') {
+      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+
+    const isInsideAnySectionArea = (target: Node | null) => {
+      if (!target) return false
+      return Boolean(
+        sectionMenuRef.current?.contains(target) ||
+          mobileMenuRef.current?.contains(target) ||
+          mobilePanelRef.current?.contains(target)
+      )
+    }
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node
+      if (!isInsideAnySectionArea(target)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    const handleOutsideTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0] || event.changedTouches[0]
+      if (!touch) return
+      const element = document.elementFromPoint(touch.clientX, touch.clientY)
+      if (!isInsideAnySectionArea(element as Node | null)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    // En desktop, hacer scroll con la rueda del mouse no dispara mousedown ni
+    // touchmove, así que el dropdown se quedaba abierto. Lo cerramos también
+    // al detectar scroll de la página.
+    const handleScroll = () => {
+      setMobileMenuOpen(false)
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('touchstart', handleOutsideClick)
+    document.addEventListener('touchmove', handleOutsideTouchMove)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('touchstart', handleOutsideClick)
+      document.removeEventListener('touchmove', handleOutsideTouchMove)
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [mobileMenuOpen, setMobileMenuOpen])
 
   return (
     <header className="sticky top-0 z-50 bg-[#810100] border-b border-[#630000] shadow-sm">
@@ -42,11 +91,17 @@ export default function Header({
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleNavClick('inicio')}
+              className="flex items-center gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-md cursor-pointer transition-opacity duration-150 hover:opacity-80 active:opacity-60"
+              aria-label="Ir al inicio"
+              title="Ir al inicio"
+            >
               {/* Imagen del logo */}
               <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary shadow-md">
                 <img
-                  src="/logo.png"
+                  src="/logo.jpeg"
                   alt="Logo Municipio de Tarija"
                   className="size-full object-contain"
                   onError={(e) => {
@@ -60,9 +115,9 @@ export default function Header({
                   <span className="text-lg font-bold text-white">Impulsa</span>
                   <span className="text-lg font-bold text-[#FFB3B3]">Tarija</span>
                 </div>
-                <p className="text-xs text-white/70 font-medium">Municipio de Tarija</p>
+                <p className="text-xs text-white/70 font-medium">Concejo Municipal de Tarija</p>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Spacer */}
@@ -71,7 +126,7 @@ export default function Header({
           {/* Contact Dropdown + Mobile Menu */}
           <div className="flex items-center gap-2">
             {/* Secciones Button with Dropdown */}
-            <div className="relative hidden sm:block">
+            <div ref={sectionMenuRef} className="relative hidden sm:block">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-all ${
@@ -86,7 +141,7 @@ export default function Header({
               </button>
               {mobileMenuOpen && (
                 <div className="absolute left-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg p-2 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-y-auto">
-                  {sections.map((section) => (
+                  {sections.filter((section) => section.id !== 'contacto').map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleNavClick(section.id)}
@@ -103,55 +158,39 @@ export default function Header({
               )}
             </div>
 
-            {/* Contact Dropdown */}
-            <div className="relative hidden md:block">
-              <button
-                onClick={() => setContactMenuOpen(!contactMenuOpen)}
-                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-all ${
-                  contactMenuOpen
-                    ? 'bg-white text-[#810100] shadow-md'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                Contacto <ChevronDown size={16} className={`transform transition-transform ${contactMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {contactMenuOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#e0e0e0] rounded-lg shadow-lg p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="border-b border-[#e0e0e0] pb-3 mb-2">
-                    <p className="text-sm font-bold text-[#810100] tracking-wider">INFORMACIÓN DE CONTACTO</p>
-                  </div>
-                  {contactInfo.map((item) => (
-                    <div key={item.label} className="hover:bg-[#f5f5f5] p-2 rounded-md transition-colors">
-                      <p className="text-xs font-semibold text-[#1a1a1a] uppercase tracking-wide">{item.label}</p>
-                      <p className="text-sm text-[#666] mt-1">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Contact link */}
+            <button
+              type="button"
+              onClick={() => handleNavClick('contacto')}
+              className="hidden md:block px-3 py-2 text-sm font-medium text-white rounded-md transition-all hover:bg-white/10"
+            >
+              Contacto
+            </button>
 
             {/* Mobile Menu Button - For Sections */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`md:hidden p-2 rounded-md transition-all ${
-                mobileMenuOpen
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-foreground hover:bg-muted'
-              }`}
-              title={mobileButtonLabel}
-              aria-label={mobileButtonLabel}
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            <div ref={mobileMenuRef} className="relative md:hidden">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`p-2 rounded-md transition-all ${
+                  mobileMenuOpen
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-muted'
+                }`}
+                title={mobileButtonLabel}
+                aria-label={mobileButtonLabel}
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Mobile Sections Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-border pt-4">
+          <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-border pt-4">
             <p className="px-3 text-xs font-bold text-primary uppercase tracking-wider mb-3">Secciones</p>
             <div className="space-y-2">
-              {sections.map((section) => (
+              {sections.filter((section) => section.id !== 'contacto').map((section) => (
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}

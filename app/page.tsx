@@ -18,7 +18,7 @@ export default function Page() {
   const sections = [
     { id: 'inicio', label: 'Inicio' },
     { id: 'ley', label: '¿Qué es la Ley?' },
-    { id: 'ecosistema', label: 'Arquitectura del Ecosistema de Innovación y Emprendimiento' },
+    { id: 'ecosistema', label: 'Ecosistema' },
     { id: 'videos', label: 'Videos' },
     { id: 'biblioteca', label: 'Biblioteca' },
     { id: 'contacto', label: 'Contacto' },
@@ -111,7 +111,7 @@ export default function Page() {
 
       <TabLayout tabs={tabs} activeTab={activeSection} onTabChange={handleNavClick} />
 
-      <Footer />
+      <Footer sections={sections} onNavigate={handleNavClick} />
     </>
   )
 }

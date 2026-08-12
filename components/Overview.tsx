@@ -257,6 +257,24 @@ const CONCEJAL_MODAL_HIGHLIGHT = {
   text: 'Tarija tiene el talento, la creatividad y el potencial para convertirse en un referente de innovación y emprendimiento. Este Proyecto de Ley nace para transformar ese potencial en oportunidades, articulando al Gobierno Municipal, las universidades, las empresas, los emprendedores y la ciudadanía en un mismo propósito. A través de una visión compartida, una gobernanza colaborativa y herramientas innovadoras, busca impulsar el desarrollo sostenible, generar empleo de calidad y construir una economía basada en el conocimiento. Porque el futuro de Tarija no depende solo de sus recursos, sino de la capacidad de su gente para crear, innovar y emprender juntos.',
 }
 
+// Instituciones que apoyan el Proyecto de Ley.
+// Placeholder temporal: reemplaza el campo `logo` de cada institución por la ruta real
+// del logo (ej. '/logos/upds.png') en cuanto te confirmen la lista definitiva y las
+// imágenes. Si `logo` no carga (archivo inexistente), se muestra automáticamente un
+// ícono genérico de respaldo para que el diseño nunca se rompa.
+const SUPPORTERS = [
+  { id: 'apoyo-1', name: 'Institución 1', logo: '/logos/institucion-1.png' },
+  { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/institucion-2.png' },
+  { id: 'apoyo-3', name: 'Institución 3', logo: '/logos/institucion-3.png' },
+  { id: 'apoyo-4', name: 'Institución 4', logo: '/logos/institucion-4.png' },
+  { id: 'apoyo-5', name: 'Institución 5', logo: '/logos/institucion-5.png' },
+  { id: 'apoyo-6', name: 'Institución 6', logo: '/logos/institucion-6.png' },
+  { id: 'apoyo-7', name: 'Institución 7', logo: '/logos/institucion-7.png' },
+  { id: 'apoyo-8', name: 'Institución 8', logo: '/logos/institucion-8.png' },
+  { id: 'apoyo-9', name: 'Institución 9', logo: '/logos/institucion-9.png' },
+  { id: 'apoyo-10', name: 'Institución 10', logo: '/logos/institucion-10.png' },
+]
+
 export default function Overview({ onNavigate }: { onNavigate: (id: string) => void }) {
 const [activeClip, setActiveClip] = useState(0)
   const [selectedAxis, setSelectedAxis] = useState<string | null>(null)
@@ -265,7 +283,18 @@ const [activeClip, setActiveClip] = useState(0)
   const [playingEpisode, setPlayingEpisode] = useState<string | null>(null)
   const [isConcejalInfoOpen, setConcejalInfoOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [mesaPage, setMesaPage] = useState(0)
+  const [podcastPage, setPodcastPage] = useState(0)
   const concejalCardRef = useRef<HTMLDivElement | null>(null)
+
+  const MESAS_PER_PAGE = 2
+  const mesaPageCount = Math.max(1, Math.ceil(MESAS_DEBATE.length / MESAS_PER_PAGE))
+  const podcastPageCount = Math.max(1, Math.ceil(PODCAST_EPISODES.length / MESAS_PER_PAGE))
+  const visibleMesas = MESAS_DEBATE.slice(mesaPage * MESAS_PER_PAGE, mesaPage * MESAS_PER_PAGE + MESAS_PER_PAGE)
+  const visiblePodcasts = PODCAST_EPISODES.slice(
+    podcastPage * MESAS_PER_PAGE,
+    podcastPage * MESAS_PER_PAGE + MESAS_PER_PAGE,
+  )
 
   const goTo = (index: number) => setActiveClip((index + HERO_CLIPS.length) % HERO_CLIPS.length)
 
@@ -316,7 +345,7 @@ const [activeClip, setActiveClip] = useState(0)
     <div className="flex flex-col gap-10">
       {/* Presentación */}
       <div className="relative overflow-hidden rounded-xl border border-[#e0e0e0] shadow-sm">
-        <div className="relative flex min-h-[16rem] flex-col justify-end bg-gradient-to-br from-[#630000] via-[#810100] to-[#A01400] p-8 sm:p-10">
+        <div className="relative flex flex-col justify-start bg-gradient-to-br from-[#630000] via-[#810100] to-[#A01400] px-6 py-4 sm:px-8 sm:py-6">
           {/* Foto del Concejo Municipal de Tarija — reemplaza /public/hero-inicio.jpg por la foto real */}
           <img
             src="/hero-tarija.jpg"
@@ -329,18 +358,73 @@ const [activeClip, setActiveClip] = useState(0)
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#630000]/90 via-[#810100]/50 to-[#810100]/10" />
 
-          <div className="relative flex flex-col gap-3">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/85">
-              Municipio de Tarija · Bolivia
-            </span>
-            <h1 className="max-w-2xl text-2xl leading-[1.15] font-extrabold tracking-tight text-white sm:text-3xl">
-              PROYECTO DE LEY MUNICIPAL DE{' '}
-              <span className="text-[#FFB199] drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
-                INNOVACIÓN
-              </span>
-              , CREATIVIDAD, EMPRENDIMIENTO Y ECONOMÍA DEL CONOCIMIENTO DEL MUNICIPIO DE TARIJA
+          <div className="relative flex flex-col gap-2 pt-2 pb-2">
+            <h1 className="max-w-3xl text-3xl leading-[1.10] font-extrabold tracking-tight text-white sm:text-3xl">
+              PROYECTO DE LEY MUNICIPAL DE INNOVACIÓN,<br />
+              <span className="text-[#FFB199] drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">CREATIVIDAD, EMPRENDIMIENTO Y ECONOMÍA DEL</span><br />
+              CONOCIMIENTO DEL MUNICIPIO DE TARIJA
             </h1>
           </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+              <div
+        ref={concejalCardRef}
+        className="grid grid-cols-1 gap-6 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm sm:grid-cols-2 sm:items-center"
+      >
+        {/* Mitad izquierda: foto grande (no circular) + nombre debajo */}
+        <div className="flex flex-col items-center gap-3 text-center sm:border-r sm:border-[#f0e2e2] sm:pr-6">
+          <button
+            type="button"
+            onClick={openConcejalInfo}
+            aria-label="Ver más información sobre el origen de la Ley"
+            className="group w-full overflow-hidden rounded-2xl transition hover:opacity-90"
+          >
+            <img
+              src={CONCEJAL.photo}
+              alt={CONCEJAL.name}
+              className="aspect-[4/5] w-full border border-[#D8A7A7] object-cover transition group-hover:border-[#810100]"
+            />
+          </button>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-[#1E1E1E]">{CONCEJAL.name}</span>
+            <span className="text-xs text-gray-500">{CONCEJAL.role}</span>
+          </div>
+        </div>
+
+        {/* Mitad derecha: información + botón */}
+        <div className="flex flex-col justify-center gap-4">
+          <h2 className="text-lg font-bold text-[#1E1E1E]">Origen de la Ley: ¿Por qué fue creada?</h2>
+          <p className="text-sm leading-relaxed text-gray-600">{CONCEJAL.originSummary}</p>
+          <button
+            type="button"
+            onClick={openConcejalInfo}
+            className="inline-flex w-fit items-center justify-center rounded-full border border-[#810100] bg-[#fff5f2] px-4 py-2 text-sm font-semibold text-[#810100] transition hover:bg-[#f3dfd8]"
+          >
+            Más información
+          </button>
+        </div>
+      </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm">
+          <div className="flex size-11 items-center justify-center rounded-lg bg-[#F8F1E7] text-[#5B0F18]">
+            <FileText aria-hidden="true" size={20} />
+          </div>
+          <h2 className="text-lg font-bold text-[#1E1E1E]">PROYECTO DE LEY MUNICIPAL DE INNOVACIÓN, CREATIVIDAD, EMPRENDIMIENTO Y ECONOMÍA DEL CONOCIMIENTO DEL MUNICIPIO DE TARIJA</h2>
+          <p className="text-sm leading-relaxed text-gray-600">
+            Esta Ley impulsa un nuevo modelo de desarrollo para Tarija, basado en la innovación, la creatividad, el emprendimiento y la colaboración entre los actores del Ecosistema Municipal, generando las condiciones para transformar el talento en oportunidades y desarrollo sostenible.
+            Conoce la propuesta completa y descubre cómo juntos podemos construir el futuro de Tarija...
+
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('ley')}
+            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#7A1F2B] hover:text-[#1E1E1E]"
+          >
+            Leer la Ley completa
+            <ArrowRight aria-hidden="true" size={14} />
+          </button>
         </div>
       </div>
 
@@ -476,51 +560,6 @@ const [activeClip, setActiveClip] = useState(0)
               }`}
             />
           ))}
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div ref={concejalCardRef} className="flex flex-col gap-4 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-3">
-            <img
-              src={CONCEJAL.photo}
-              alt={CONCEJAL.name}
-              className="size-12 shrink-0 rounded-full border border-[#D8A7A7] object-cover"
-            />
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-[#1E1E1E]">{CONCEJAL.name}</span>
-              <span className="text-xs text-gray-500">{CONCEJAL.role}</span>
-            </div>
-          </div>
-          <h2 className="text-lg font-bold text-[#1E1E1E]">Origen de la Ley: ¿Por qué fue creada?</h2>
-          <p className="text-sm leading-relaxed text-gray-600">{CONCEJAL.originSummary}</p>
-          <button
-            type="button"
-            onClick={openConcejalInfo}
-            className="inline-flex w-fit items-center justify-center rounded-full border border-[#810100] bg-[#fff5f2] px-4 py-2 text-sm font-semibold text-[#810100] transition hover:bg-[#f3dfd8]"
-          >
-            Más información
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-4 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm">
-          <div className="flex size-11 items-center justify-center rounded-lg bg-[#F8F1E7] text-[#5B0F18]">
-            <FileText aria-hidden="true" size={20} />
-          </div>
-          <h2 className="text-lg font-bold text-[#1E1E1E]">PROYECTO DE LEY MUNICIPAL DE INNOVACIÓN, CREATIVIDAD, EMPRENDIMIENTO Y ECONOMÍA DEL CONOCIMIENTO DEL MUNICIPIO DE TARIJA</h2>
-          <p className="text-sm leading-relaxed text-gray-600">
-            Esta Ley impulsa un nuevo modelo de desarrollo para Tarija, basado en la innovación, la creatividad, el emprendimiento y la colaboración entre los actores del Ecosistema Municipal, generando las condiciones para transformar el talento en oportunidades y desarrollo sostenible.
-            Conoce la propuesta completa y descubre cómo juntos podemos construir el futuro de Tarija...
-
-          </p>
-          <button
-            type="button"
-            onClick={() => onNavigate('ley')}
-            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#7A1F2B] hover:text-[#1E1E1E]"
-          >
-            Leer la Ley completa
-            <ArrowRight aria-hidden="true" size={14} />
-          </button>
         </div>
       </div>
 
@@ -722,16 +761,18 @@ const [activeClip, setActiveClip] = useState(0)
 
         </div>
 
-        <div className="flex flex-col gap-5 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-bold text-[#1E1E1E]">Mesas de Debate</h2>
-            <span className="text-xs font-semibold tracking-wide text-[#810100] uppercase">
-              Mesas-Desafíos
-</span>
-          </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Mesas de Debate — carrusel de 2 videos */}
+          <div className="flex flex-col gap-5 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold text-[#1E1E1E]">Mesas de Debate</h2>
+              <span className="text-xs font-semibold tracking-wide text-[#810100] uppercase">
+             
+              </span>
+            </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-{MESAS_DEBATE.map((mesa) => {
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+{visibleMesas.map((mesa) => {
               const Icon = mesa.icon
               const embedUrl = getYoutubeEmbedUrl(mesa.youtubeUrl)
               const thumbnailUrl = getYoutubeThumbnailUrl(mesa.youtubeUrl)
@@ -823,21 +864,52 @@ const [activeClip, setActiveClip] = useState(0)
                 </article>
               )
             })}
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setMesaPage((page) => (page - 1 + mesaPageCount) % mesaPageCount)}
+                aria-label="Mesas anteriores"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#810100] bg-white text-[#810100] shadow-sm transition-colors hover:bg-[#f5f5f5]"
+              >
+                <ChevronLeft aria-hidden="true" size={16} />
+              </button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: mesaPageCount }).map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setMesaPage(index)}
+                    aria-label={`Ir a la página ${index + 1} de mesas`}
+                    className={`h-2 rounded-full transition-all ${
+                      index === mesaPage ? 'w-6 bg-[#810100]' : 'w-2 bg-[#e0e0e0] hover:bg-[#810100]'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setMesaPage((page) => (page + 1) % mesaPageCount)}
+                aria-label="Siguientes mesas"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#810100] bg-white text-[#810100] shadow-sm transition-colors hover:bg-[#f5f5f5]"
+              >
+                <ChevronRight aria-hidden="true" size={16} />
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Podcast */}
-      <div className="flex flex-col gap-5 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-bold text-[#1E1E1E]">Podcast</h2>
-          <span className="text-xs font-semibold tracking-wide text-[#810100] uppercase">
-Videos y cápsulas
-          </span>
-        </div>
+          {/* Podcast — carrusel de 2 videos */}
+          <div className="flex flex-col gap-5 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold text-[#1E1E1E]">Podcast</h2>
+              <span className="text-xs font-semibold tracking-wide text-[#810100] uppercase">
+           
+              </span>
+            </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-{PODCAST_EPISODES.map((episode) => {
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+{visiblePodcasts.map((episode) => {
             const embedUrl = getYoutubeEmbedUrl(episode.youtubeUrl)
             const thumbnailUrl = getYoutubeThumbnailUrl(episode.youtubeUrl)
             const isPlaying = playingEpisode === episode.id
@@ -928,16 +1000,79 @@ Videos y cápsulas
               </article>
             )
           })}
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setPodcastPage((page) => (page - 1 + podcastPageCount) % podcastPageCount)}
+                aria-label="Episodios anteriores"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#810100] bg-white text-[#810100] shadow-sm transition-colors hover:bg-[#f5f5f5]"
+              >
+                <ChevronLeft aria-hidden="true" size={16} />
+              </button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: podcastPageCount }).map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setPodcastPage(index)}
+                    aria-label={`Ir a la página ${index + 1} de episodios`}
+                    className={`h-2 rounded-full transition-all ${
+                      index === podcastPage ? 'w-6 bg-[#810100]' : 'w-2 bg-[#e0e0e0] hover:bg-[#810100]'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setPodcastPage((page) => (page + 1) % podcastPageCount)}
+                aria-label="Siguientes episodios"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#810100] bg-white text-[#810100] shadow-sm transition-colors hover:bg-[#f5f5f5]"
+              >
+                <ChevronRight aria-hidden="true" size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Con el apoyo de */}
+      <div className="flex flex-col gap-6 rounded-xl bg-white p-6 shadow-sm">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-[#1E1E1E]">Con el apoyo de:</h2>
+          <p className="mt-2 text-sm text-gray-600">Instituciones que respaldan este proyecto de ley</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
+          {SUPPORTERS.map((supporter) => (
+            <div
+              key={supporter.id}
+              className="group flex items-center justify-center py-6"
+            >
+              <img
+                src={supporter.logo}
+                alt={supporter.name}
+                title={supporter.name}
+                className="h-32 w-auto max-w-full object-contain grayscale transition-all duration-300 ease-out group-hover:scale-110 group-hover:grayscale-0 sm:h-36"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                }}
+              />
+              <Building2
+                aria-hidden="true"
+                size={72}
+                className="hidden text-[#c9a3a3] transition-all duration-300 ease-out group-hover:scale-110 group-hover:text-[#810100]"
+              />
+            </div>
+          ))}
         </div>
       </div>
 
       {/*
         MODAL "Más información" del Concejal.
-        Se renderiza con createPortal directamente en document.body para que
-        `position: fixed` se calcule siempre respecto al viewport real, sin
-        importar si algún contenedor padre del layout tiene transform/filter
-        (lo cual rompe `fixed` y hacía que el modal apareciera desplazado
-        hacia abajo y el fondo gris no cubriera toda la pantalla).
+       
       */}
       {isMounted && isConcejalInfoOpen
         ? createPortal(
@@ -958,7 +1093,12 @@ Videos y cápsulas
                   Cerrar
                 </button>
 
-                <div className="p-6 pt-14 sm:p-8 sm:pt-14">
+                <div className="p-6 pt-10 sm:p-6 sm:pt-10">
+                      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                    <span className="h-7 w-1.5 shrink-0 rounded-full bg-[#810100]" />
+                    <h2 className="max-w-2xl text-xl font-bold text-[#1E1E1E] sm:text-2xl">{CONCEJAL_MODAL_HEADING}</h2>
+                  </div>
+
                   <div className="float-left mb-4 mr-6 w-36 sm:w-40">
                     {/* Foto del Concejal: sube el archivo a /public/concejal-renan.jpg (o el nombre que uses)
                         y actualiza CONCEJAL.photo en lib/home-content.ts con esa ruta, ej: '/concejal-renan.jpg' */}
@@ -972,11 +1112,6 @@ Videos y cápsulas
                       <p className="mt-0.5 text-xs leading-tight text-gray-600">{CONCEJAL.role}</p>
                       <p className="text-xs leading-tight text-gray-600">Concejo Municipal de Tarija</p>
                     </div>
-                  </div>
-
-                  <div className="mb-3 flex items-center gap-3">
-                    <span className="h-7 w-1.5 shrink-0 rounded-full bg-[#810100]" />
-                    <h2 className="text-xl font-bold text-[#1E1E1E] sm:text-2xl">{CONCEJAL_MODAL_HEADING}</h2>
                   </div>
 
                   {/* Entradilla: primer párrafo destacado para dar entrada a la lectura */}

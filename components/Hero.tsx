@@ -12,11 +12,7 @@ export default function Hero() {
 
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-20">
-      {/* Foto de fondo: usamos el endpoint oficial Special:FilePath de Wikimedia Commons,
-          que redirige siempre al archivo real sin necesidad de adivinar la URL con el hash.
-          Foto: "Plaza y Monumento a Luis de Fuentes, Tarija - Bolivia.jpg" (CC BY-SA 4.0)
-          https://commons.wikimedia.org/wiki/File:Plaza_y_Monumento_a_Luis_de_Fuentes_Tarija_-_Bolivia.jpg
-          Si prefieres otra foto, cambia el nombre de archivo en la URL de abajo. */}
+      {/*  */}
       <img
         src="https://commons.wikimedia.org/wiki/Special:FilePath/Plaza_y_Monumento_a_Luis_de_Fuentes_Tarija_-_Bolivia.jpg?width=1600"
         alt="Plaza principal de Tarija"
