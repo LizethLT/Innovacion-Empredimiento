@@ -50,3 +50,23 @@ export async function GET() {
 
   return NextResponse.json({ noticias: data })
 }
+
+export async function DELETE(req: NextRequest) {
+  if (!(await estaAutenticado())) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  const id = req.nextUrl.searchParams.get('id')
+  if (!id) {
+    return NextResponse.json({ error: 'Falta el id de la noticia' }, { status: 400 })
+  }
+
+  const { error } = await supabaseAdmin.from('noticias').delete().eq('id', id)
+
+  if (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'No se pudo eliminar la noticia' }, { status: 500 })
+  }
+
+  return NextResponse.json({ message: 'Noticia eliminada' })
+}

@@ -1,6 +1,15 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
+
+interface Noticia {
+  id: string
+  titulo: string
+  descripcion: string | null
+  link: string
+  tipo: string
+  created_at: string
+}
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -12,6 +21,21 @@ export default function AdminPage() {
   const [link, setLink] = useState('')
   const [tipo, setTipo] = useState('noticia')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
+  const [noticias, setNoticias] = useState<Noticia[]>([])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const cargarNoticias = async () => {
+    const res = await fetch('/api/admin/noticias')
+    if (res.ok) {
+      const data = await res.json()
+      setNoticias(data.noticias ?? [])
+    }
+  }
+
+  useEffect(() => {
+    if (authenticated) cargarNoticias()
+  }, [authenticated])
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
@@ -42,8 +66,23 @@ export default function AdminPage() {
       setTitulo('')
       setDescripcion('')
       setLink('')
+      cargarNoticias()
     } catch {
       setStatus('error')
+    }
+  }
+
+  const handleEliminar = async (id: string) => {
+    if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return
+    setDeletingId(id)
+    try {
+      const res = await fetch(`/api/admin/noticias?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      setNoticias((prev) => prev.filter((n) => n.id !== id))
+    } catch {
+      alert('No se pudo eliminar la noticia. Intenta de nuevo.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -147,6 +186,32 @@ export default function AdminPage() {
           </p>
         )}
       </form>
+
+      <div className="max-w-xl mx-auto mt-8 space-y-3">
+        <h2 className="text-lg font-bold text-[#1E1E1E]">Noticias publicadas</h2>
+        {noticias.length === 0 ? (
+          <p className="text-sm text-gray-600">Todavía no hay noticias publicadas.</p>
+        ) : (
+          noticias.map((noticia) => (
+            <div
+              key={noticia.id}
+              className="bg-white border border-[#D8A7A7] rounded-lg p-4 flex items-center justify-between gap-4"
+            >
+              <div>
+                <p className="font-semibold text-[#1E1E1E]">{noticia.titulo}</p>
+                <p className="text-xs text-gray-600">{noticia.tipo === 'video' ? 'Video' : 'Noticia'}</p>
+              </div>
+              <button
+                onClick={() => handleEliminar(noticia.id)}
+                disabled={deletingId === noticia.id}
+                className="px-3 py-2 bg-red-700 text-white text-sm font-semibold rounded-lg hover:bg-red-800 disabled:opacity-60 shrink-0"
+              >
+                {deletingId === noticia.id ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
