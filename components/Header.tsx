@@ -1,20 +1,34 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Menu, X } from 'lucide-react'
 
 interface HeaderProps {
   mobileMenuOpen: boolean
   setMobileMenuOpen: (value: boolean) => void
+  /** Secciones usadas en el dropdown "Secciones" (icono) y en el menú mobile */
   sections: Array<{ id: string; label: string }>
+  /**
+   * Secciones destacadas que se muestran como links directos en el centro del header
+   * (desktop). Si no se pasa, se usan los 4 ejes por defecto de la Ley.
+   */
+  centerSections?: Array<{ id: string; label: string }>
   activeSection: string
   setActiveSection: (id: string) => void
 }
+
+const DEFAULT_CENTER_SECTIONS = [
+  { id: 'origen', label: 'Origen de la Ley' },
+  { id: 'ecosistema', label: 'El Ecosistema' },
+  { id: 'instrumentos', label: 'Instrumentos' },
+  { id: 'ejes', label: 'Ejes Programáticos' },
+]
 
 export default function Header({
   mobileMenuOpen,
   setMobileMenuOpen,
   sections,
+  centerSections = DEFAULT_CENTER_SECTIONS,
   activeSection,
   setActiveSection,
 }: HeaderProps) {
@@ -22,19 +36,14 @@ export default function Header({
   const mobileMenuRef = useRef<HTMLDivElement | null>(null)
   const mobilePanelRef = useRef<HTMLDivElement | null>(null)
 
-
   const mobileButtonLabel = mobileMenuOpen ? 'Cerrar menú de secciones' : 'Abrir menú de secciones'
+
+  // Secciones del dropdown/mobile (todas menos "contacto")
+  const navSections = sections.filter((section) => section.id !== 'contacto')
 
   const handleNavClick = (id: string) => {
     setActiveSection(id)
     setMobileMenuOpen(false)
-
-    if (id === 'contacto') {
-      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' })
-      return
-    }
-
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   useEffect(() => {
@@ -120,28 +129,45 @@ export default function Header({
             </button>
           </div>
 
-          {/* Spacer */}
-          <div className="flex-1"></div>
+          {/* Secciones destacadas (centro) - Origen de la Ley / Ecosistema / Instrumentos / Ejes */}
+          <nav className="hidden md:flex flex-1 items-center justify-center gap-1 lg:gap-2 px-4">
+            {centerSections.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => handleNavClick(section.id)}
+                className={`px-3 py-2 text-sm font-semibold rounded-md whitespace-nowrap transition-all ${
+                  activeSection === section.id
+                    ? 'bg-white text-[#810100] shadow-md'
+                    : 'text-white hover:bg-white/10'
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </nav>
 
-          {/* Contact Dropdown + Mobile Menu */}
-          <div className="flex items-center gap-2">
-            {/* Secciones Button with Dropdown */}
+          {/* Spacer (solo cuando el nav central está oculto, en pantallas < md) */}
+          <div className="flex-1 md:hidden"></div>
+
+          {/* Secciones (icono, dropdown con Inicio / ¿Qué es la Ley? / Ecosistema / Videos / Biblioteca) + Contacto */}
+          <div className="flex items-center gap-2 shrink-0">
             <div ref={sectionMenuRef} className="relative hidden sm:block">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                className={`flex items-center justify-center p-2 rounded-md transition-all ${
                   mobileMenuOpen
                     ? 'bg-white text-[#810100] shadow-md'
                     : 'text-white hover:bg-white/10'
                 }`}
                 title="Ver secciones"
+                aria-label="Ver secciones"
               >
-                <Menu size={16} />
-                <span>Secciones</span>
+                <Menu size={20} />
               </button>
               {mobileMenuOpen && (
-                <div className="absolute left-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg p-2 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-y-auto">
-                  {sections.filter((section) => section.id !== 'contacto').map((section) => (
+                <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg p-2 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-y-auto">
+                  {navSections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleNavClick(section.id)}
@@ -167,14 +193,14 @@ export default function Header({
               Contacto
             </button>
 
-            {/* Mobile Menu Button - For Sections */}
+            {/* Mobile Menu Button - para pantallas pequeñas */}
             <div ref={mobileMenuRef} className="relative md:hidden">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`p-2 rounded-md transition-all ${
                   mobileMenuOpen
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-foreground hover:bg-muted'
+                    ? 'bg-white text-[#810100]'
+                    : 'text-white hover:bg-white/10'
                 }`}
                 title={mobileButtonLabel}
                 aria-label={mobileButtonLabel}
@@ -185,24 +211,30 @@ export default function Header({
           </div>
         </div>
 
-        {/* Mobile Sections Menu */}
+        {/* Mobile Sections Menu (usa las secciones del dropdown, igual que antes) */}
         {mobileMenuOpen && (
-          <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-border pt-4">
-            <p className="px-3 text-xs font-bold text-primary uppercase tracking-wider mb-3">Secciones</p>
+          <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-white/20 pt-4">
+            <p className="px-3 text-xs font-bold text-white/70 uppercase tracking-wider mb-3">Secciones</p>
             <div className="space-y-2">
-              {sections.filter((section) => section.id !== 'contacto').map((section) => (
+              {navSections.map((section) => (
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     activeSection === section.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted'
+                      ? 'bg-white text-[#810100]'
+                      : 'text-white hover:bg-white/10'
                   }`}
                 >
                   {section.label}
                 </button>
               ))}
+              <button
+                onClick={() => handleNavClick('contacto')}
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-white/10 transition-colors"
+              >
+                Contacto
+              </button>
             </div>
           </div>
         )}

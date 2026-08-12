@@ -32,6 +32,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { CONCEJAL, MESAS_DEBATE, PODCAST_EPISODES } from '@/lib/home-content'
+import { articles, getArticleByRange } from '@/lib/articles'
 import { getYoutubeEmbedUrl, getYoutubeThumbnailUrl } from '@/lib/youtube'
 import VideoThumbnail from '@/components/VideoThumbnail'
 
@@ -285,6 +286,8 @@ const [activeClip, setActiveClip] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
   const [mesaPage, setMesaPage] = useState(0)
   const [podcastPage, setPodcastPage] = useState(0)
+  const [selectedArticle, setSelectedArticle] = useState<(typeof articles)[0] | null>(null)
+  const [isArticleModalOpen, setArticleModalOpen] = useState(false)
   const concejalCardRef = useRef<HTMLDivElement | null>(null)
 
   const MESAS_PER_PAGE = 2
@@ -341,6 +344,54 @@ const [activeClip, setActiveClip] = useState(0)
     })
   }
 
+  const handleArticleClick = (range: string) => {
+    // Normalizar el rango: convertir "37 al 42" -> "37 al 42", etc.
+    const normalizedRange = range.trim()
+    const article = getArticleByRange(normalizedRange)
+    if (article) {
+      setSelectedArticle(article)
+      setArticleModalOpen(true)
+    }
+  }
+
+  const closeArticleModal = () => {
+    setArticleModalOpen(false)
+    window.setTimeout(() => {
+      setSelectedArticle(null)
+    }, 300)
+  }
+
+  // Componente helper para renderizar texto con botones de artículos
+  const renderDescriptionWithArticleLinks = (text: string) => {
+    // Patrón flexible que captura "art. XX al YY de la ley" o variaciones
+    const articlePattern = /\(art\.\s+([^)]+)\s+de la ley\)/gi
+    const parts = text.split(articlePattern)
+
+    return (
+      <>
+        {parts.map((part, index) => {
+          if (index % 2 === 0) {
+            return <span key={index}>{part}</span>
+          } else {
+            // part contiene el rango, ej: "37 al 42", "24", etc.
+            const range = part.trim()
+            return (
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleArticleClick(range)}
+                className="ml-1 inline-flex items-center gap-1 rounded-md bg-[#810100] px-2 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-[#630000]"
+                title={`Ver artículos ${range}`}
+              >
+                art. {range}
+              </button>
+            )
+          }
+        })}
+      </>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-10">
       {/* Presentación */}
@@ -370,6 +421,7 @@ const [activeClip, setActiveClip] = useState(0)
 
       <div className="grid gap-6 lg:grid-cols-2">
               <div
+        id="concejal"
         ref={concejalCardRef}
         className="grid grid-cols-1 gap-6 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm sm:grid-cols-2 sm:items-center"
       >
@@ -395,7 +447,7 @@ const [activeClip, setActiveClip] = useState(0)
 
         {/* Mitad derecha: información + botón */}
         <div className="flex flex-col justify-center gap-4">
-          <h2 className="text-lg font-bold text-[#1E1E1E]">Origen de la Ley: ¿Por qué fue creada?</h2>
+          <h2 id="origen-de-la-ley" className="text-lg font-bold text-[#1E1E1E]">Origen de la Ley: ¿Por qué fue creada?</h2>
           <p className="text-sm leading-relaxed text-gray-600">{CONCEJAL.originSummary}</p>
           <button
             type="button"
@@ -574,7 +626,7 @@ const [activeClip, setActiveClip] = useState(0)
           <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)]">
             <div className="border-b border-[#D8A7A7] xl:border-r xl:border-b-0">
               <div className="bg-[#1E1E1E] px-5 py-3 text-left text-white">
-                <h3 className="text-base font-semibold tracking-wide uppercase">Ejes programáticos permanentes</h3>
+                <h3 id="ejes-programaticos-permanentes" className="text-base font-semibold tracking-wide uppercase">Ejes programáticos permanentes</h3>
                 <p className="mt-1 text-[10px] text-white/75">Objetivos</p>
               </div>
               <div className="bg-white">
@@ -613,7 +665,7 @@ const [activeClip, setActiveClip] = useState(0)
                           id="ejes-programaticos-detalle"
                           className="px-4 pb-4 text-[13px] leading-relaxed text-gray-700"
                         >
-                          {item.description}
+                          {renderDescriptionWithArticleLinks(item.description)}
                         </div>
                       )}
                     </div>
@@ -624,7 +676,7 @@ const [activeClip, setActiveClip] = useState(0)
 
             <div className="flex flex-col gap-4 p-4 xl:p-6">
               <div className="flex flex-col items-center gap-1 text-center">
-                <h3 className="text-sm font-bold tracking-wide text-[#1E1E1E] uppercase">
+                <h3 id="consejo-municipal-innovacion" className="text-sm font-bold tracking-wide text-[#1E1E1E] uppercase">
                   Consejo Municipal de Innovación y Emprendimiento
                 </h3>
                 <p className="text-[11px] text-gray-500">Estructura y actores del Ecosistema Municipal</p>
@@ -706,8 +758,8 @@ const [activeClip, setActiveClip] = useState(0)
 
             <div className="border-t border-[#D8A7A7] xl:border-l xl:border-t-0">
               <div className="bg-[#1E1E1E] px-5 py-3 text-left text-white">
-                <h3 className="text-base font-semibold tracking-wide uppercase">
-                  Instrumentos Estratégicos 
+                <h3 id="instrumentos-estrategicos" className="text-base font-semibold tracking-wide uppercase">
+                  Instrumentos Estratégicos
                 </h3>
                 <p className="mt-1 text-[10px] text-white/75">
                   Estrategias
@@ -749,7 +801,7 @@ const [activeClip, setActiveClip] = useState(0)
                           id="instrumentos-detalle"
                           className="px-4 pb-4 text-[13px] leading-relaxed text-gray-700"
                         >
-                          {item.description}
+                          {renderDescriptionWithArticleLinks(item.description)}
                         </div>
                       )}
                     </div>
@@ -1148,6 +1200,49 @@ const [activeClip, setActiveClip] = useState(0)
                       {CONCEJAL_MODAL_HIGHLIGHT.title}
                     </h3>
                     <p className="mt-2 text-sm leading-relaxed text-gray-700">{CONCEJAL_MODAL_HIGHLIGHT.text}</p>
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+
+      {/* Modal de Artículos */}
+      {isMounted && isArticleModalOpen && selectedArticle
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-6 sm:px-6"
+              onClick={closeArticleModal}
+            >
+              <div
+                className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={closeArticleModal}
+                  aria-label="Cerrar"
+                  className="sticky top-4 right-4 z-10 rounded-full border border-[#e8dede] bg-white px-3 py-2 text-sm font-semibold text-[#1E1E1E] shadow-sm transition hover:bg-[#f9f9f9]"
+                >
+                  Cerrar
+                </button>
+
+                <div className="p-6 sm:p-8">
+                  <div className="mb-6 flex flex-col gap-2">
+                    <span className="h-1 w-12 rounded-full bg-[#810100]" />
+                    <h2 className="text-2xl font-bold text-[#621b27] sm:text-3xl">
+                      Artículos {selectedArticle.range}
+                    </h2>
+                    <p className="text-base font-semibold text-[#810100]">{selectedArticle.title}</p>
+                  </div>
+
+                  <div className="prose prose-sm max-w-none text-gray-700">
+                    {selectedArticle.content.split('\n\n').map((paragraph, index) => (
+                      <p key={index} className="mb-4 whitespace-pre-wrap leading-relaxed text-sm">
+                        {paragraph}
+                      </p>
+                    ))}
                   </div>
                 </div>
               </div>

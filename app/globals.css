@@ -174,4 +174,11 @@
   html {
     scroll-behavior: smooth;
   }
+
+  [id='origen-de-la-ley'],
+  [id='instrumentos-estrategicos'],
+  [id='ejes-programaticos-permanentes'],
+  [id='ecosistema'] {
+    scroll-margin-top: 150px;
+  }
 }

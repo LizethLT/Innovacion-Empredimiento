@@ -1,7 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users, X, Book, FileText, Gavel } from 'lucide-react'
+import { articles, getArticleByRange } from '@/lib/articles'
 
 const ITEMS = [
   {
@@ -86,7 +88,57 @@ const actorIcons = [Building2, Briefcase, GraduationCap, Handshake, Target, User
 export default function InteractiveEcosystem() {
   const descriptionRef = useRef<HTMLDivElement | null>(null)
   const [selectedId, setSelectedId] = useState('actores')
+  const [selectedArticle, setSelectedArticle] = useState<(typeof articles)[0] | null>(null)
+  const [isArticleModalOpen, setArticleModalOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const selected = ITEMS.find((item) => item.id === selectedId) ?? ITEMS[0]
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const handleArticleClick = (articleText: string) => {
+    // Mapeo flexible que convierte formatos de display a rangos de búsqueda
+    const articleMap: { [key: string]: string } = {
+      'Art. 15–18 y 23': '15 al 23',
+      'Art. 24': '24 al 24',
+      'Art. 30–34': '30 al 34',
+      'Art. 20–22': '20 al 22',
+      'Art. 19': '19 al 19',
+      'Art. 25–29': '25 al 29',
+    }
+    
+    // Intenta encontrar un mapeo exacto primero
+    let range = articleMap[articleText.trim()]
+    
+    // Si no encuentra mapeo exacto, intenta extraer el primer rango del texto
+    if (!range) {
+      const match = articleText.match(/(\d+)\s*(?:–|-|al)\s*(\d+)/)
+      if (match) {
+        range = `${match[1]} al ${match[2]}`
+      } else {
+        const singleMatch = articleText.match(/(\d+)/)
+        if (singleMatch) {
+          range = `${singleMatch[1]} al ${singleMatch[1]}`
+        }
+      }
+    }
+    
+    if (range) {
+      const article = getArticleByRange(range)
+      if (article) {
+        setSelectedArticle(article)
+        setArticleModalOpen(true)
+      }
+    }
+  }
+
+  const closeArticleModal = () => {
+    setArticleModalOpen(false)
+    window.setTimeout(() => {
+      setSelectedArticle(null)
+    }, 300)
+  }
 
   const handleSelect = (id: string) => {
     setSelectedId(id)
@@ -99,7 +151,7 @@ export default function InteractiveEcosystem() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfaf8] px-4 py-8 text-[#241f20] sm:px-8 sm:py-12">
+    <main id="ecosistema" className="min-h-screen bg-[#fbfaf8] px-4 py-8 text-[#241f20] sm:px-8 sm:py-12">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8 text-center sm:mb-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#8c2432]">Arquitectura institucional</p>
@@ -136,7 +188,14 @@ export default function InteractiveEcosystem() {
           <aside ref={descriptionRef} className="rounded-[2rem] border border-[#ead9d3] bg-white p-6 shadow-[0_20px_60px_rgba(98,27,39,0.08)] sm:p-8" aria-live="polite">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#a64b57]">Información del componente</p>
-              <span className="whitespace-nowrap rounded-full bg-[#fbf0ec] px-3 py-1 text-[10px] font-bold text-[#8c2432]">{selected.article}</span>
+              <button
+                type="button"
+                onClick={() => handleArticleClick(selected.article)}
+                className="whitespace-nowrap rounded-full bg-[#810100] px-3 py-1 text-[10px] font-bold text-white transition-colors hover:bg-[#630000]"
+                title={`Ver ${selected.article}`}
+              >
+                {selected.article}
+              </button>
             </div>
             <h2 className="mt-3 text-2xl font-bold leading-tight text-[#621b27] sm:text-3xl">{selected.title}</h2>
             <p className="mt-4 text-sm leading-7 text-[#766c6b]">{selected.description}</p>
@@ -147,10 +206,136 @@ export default function InteractiveEcosystem() {
 
         <nav className="mt-8 rounded-[2rem] border border-[#ead9d3] bg-white p-4 shadow-[0_12px_30px_rgba(98,27,39,0.08)] sm:p-5" aria-label="Navegación de componentes"><p className="mb-3 px-2 text-[11px] font-bold uppercase tracking-[0.3em] text-[#a64b57]">Explorar arquitectura</p><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">{ITEMS.map((item) => { const Icon = item.icon; return <button key={item.id} type="button" onClick={() => handleSelect(item.id)} aria-pressed={selectedId === item.id} className={`group flex min-h-14 items-center gap-3 rounded-2xl border px-3 py-3 text-left text-xs font-semibold transition hover:-translate-y-0.5 ${selectedId === item.id ? 'border-[#8c2432] bg-[#8c2432] text-white shadow-[0_8px_18px_rgba(140,36,50,0.22)]' : 'border-[#ead9d3] bg-[#fffdfb] text-[#4e4141] hover:border-[#c77d80] hover:bg-[#fff5f1] hover:shadow-sm'}`}><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${selectedId === item.id ? 'bg-[#a94d5b]' : 'bg-[#fbf0ec] text-[#8c2432] group-hover:bg-[#f4ddd8]'}`}><Icon size={16} aria-hidden="true" /></span><span>{item.title}</span></button> })}</div></nav>
       </div>
+
+      {/* Modal de Artículos */}
+      {isMounted && isArticleModalOpen && selectedArticle
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/60 px-4 py-6 sm:px-6"
+              onClick={closeArticleModal}
+            >
+              <div
+                className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={closeArticleModal}
+                  aria-label="Cerrar"
+                  className="sticky top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#810100] text-white shadow-lg transition hover:bg-[#630000]"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="p-6 sm:p-10">
+                  {/* Header */}
+                  <div className="mb-8 text-center">
+                    <div className="flex justify-center gap-2 mb-4">
+                      <Gavel size={24} className="text-[#810100]" />
+                    </div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#8c2432] mb-2">Artículos</p>
+                    <h2 className="text-3xl font-black text-[#621b27] mb-2">
+                      {selectedArticle.range}
+                    </h2>
+                    <p className="text-lg font-bold text-[#810100]">{selectedArticle.title}</p>
+                    <div className="h-1 w-16 bg-[#810100] rounded-full mx-auto mt-4"></div>
+                  </div>
+
+                  {/* Contenido del artículo */}
+                  <div className="space-y-6">
+                    {renderArticleContent(selectedArticle.content)}
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </main>
   )
 }
 
 function InfoBlock({ title, items }: { title: string; items: string[] }) {
   return <div className="rounded-2xl border border-[#f0e5e0] bg-[#fffaf7] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a64b57]">{title}</p><ul className="mt-3 space-y-2 text-xs leading-5 text-[#766c6b]">{items.map((item) => <li key={item} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#a64b57]" />{item}</li>)}</ul></div>
+}
+
+function renderArticleContent(content: string) {
+  const lines = content.split('\n').filter(line => line.trim())
+  const elements: JSX.Element[] = []
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    
+    // CAPÍTULO
+    if (line.startsWith('CAPÍTULO')) {
+      elements.push(
+        <div key={`chapter-${i}`} className="py-6 text-center border-y-2 border-[#810100] bg-[#fbf0ec]">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#810100] mb-2">Sistema Municipal</p>
+          <h3 className="text-2xl font-black text-[#621b27]">{line}</h3>
+        </div>
+      )
+    }
+    
+    // TÍTULO principal (en mayúsculas, sin numeración)
+    else if (line.match(/^[A-ZÁÉÍÓÚÑa-záéíóúñ\s]+$/) && line.length > 10 && !line.includes('Artículo') && !line.startsWith('I.')) {
+      elements.push(
+        <div key={`title-${i}`} className="mt-6 mb-4">
+          <h3 className="text-xl font-bold text-[#621b27] text-center uppercase tracking-wide">{line}</h3>
+        </div>
+      )
+    }
+    
+    // Artículo (Artículo 25, Artículo 26, etc.)
+    else if (line.match(/^Artículo\s+\d+/)) {
+      const articleMatch = line.match(/^(Artículo\s+\d+)\.?\s*\((.*?)\)(.*)/)
+      if (articleMatch) {
+        elements.push(
+          <div key={`article-${i}`} className="mt-6 mb-4 rounded-xl bg-gradient-to-r from-[#fbf0ec] to-[#fff5f1] p-4 border-l-4 border-[#810100]">
+            <div className="flex items-start gap-3">
+              <FileText size={20} className="text-[#810100] mt-1 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-[#810100]">{articleMatch[1]}</p>
+                <h4 className="text-lg font-bold text-[#621b27]">({articleMatch[2]})</h4>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    }
+    
+    // Romanos (I., II., III., etc.)
+    else if (line.match(/^[IVX]+\./)) {
+      elements.push(
+        <div key={`roman-${i}`} className="mt-4 ml-4 pl-4 border-l-2 border-[#dfa0a0]">
+          <p className="text-sm leading-7 text-[#441f25]">
+            <span className="font-bold text-[#810100]">{line.substring(0, line.indexOf('.') + 1)}</span>
+            {line.substring(line.indexOf('.') + 1)}
+          </p>
+        </div>
+      )
+    }
+    
+    // Letras (a), b), c), etc.)
+    else if (line.match(/^[a-z]\)/)) {
+      elements.push(
+        <div key={`letter-${i}`} className="mt-2 ml-8">
+          <p className="text-sm leading-7 text-[#441f25]">
+            <span className="font-bold text-[#810100]">{line.substring(0, line.indexOf(')') + 1)}</span>
+            {line.substring(line.indexOf(')') + 1)}
+          </p>
+        </div>
+      )
+    }
+    
+    // Texto normal
+    else if (line.length > 0) {
+      elements.push(
+        <p key={`text-${i}`} className="text-sm leading-7 text-[#441f25]">
+          {line}
+        </p>
+      )
+    }
+  }
+  
+  return elements
 }
