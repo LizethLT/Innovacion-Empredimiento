@@ -60,7 +60,7 @@ export default function AdminPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Contraseña"
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B]"
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
             required
           />
           {loginError && <p className="text-sm text-red-700">{loginError}</p>}
@@ -84,44 +84,44 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold text-[#1E1E1E]">Publicar noticia</h1>
 
         <div>
-          <label className="block text-sm font-semibold mb-2">Título</label>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Título</label>
           <input
             type="text"
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             required
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B]"
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-2">Descripción</label>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Descripción</label>
           <textarea
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             rows={3}
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B]"
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-2">Link (video o noticia)</label>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Link (video o noticia)</label>
           <input
             type="url"
             value={link}
             onChange={(e) => setLink(e.target.value)}
             required
             placeholder="https://..."
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B]"
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-2">Tipo</label>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Tipo</label>
           <select
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B]"
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E]"
           >
             <option value="noticia">Noticia</option>
             <option value="video">Video</option>
