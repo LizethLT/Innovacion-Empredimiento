@@ -15,6 +15,7 @@ import Footer from '@/components/Footer'
 export default function Page() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('inicio')
+  const [isOriginModalOpen, setIsOriginModalOpen] = useState(false)
   const anchorNavRef = useRef(false)
 
   const sections = [
@@ -22,7 +23,6 @@ export default function Page() {
     { id: 'ley', label: '¿Qué es la Ley?' },
     { id: 'ecosistema', label: 'Ecosistema' },
     { id: 'videos', label: 'Videos' },
-    { id: 'noticias', label: 'Noticias' },
     { id: 'biblioteca', label: 'Biblioteca' },
     { id: 'contacto', label: 'Contacto' },
   ]
@@ -55,6 +55,24 @@ export default function Page() {
       id === 'origen-de-la-ley' ||
       id === 'instrumentos-estrategicos' ||
       id === 'ejes-programaticos-permanentes'
+
+    if (id === 'origen-de-la-ley') {
+      setIsOriginModalOpen(true)
+      setActiveSection('inicio')
+      setMobileMenuOpen(false)
+
+      if (typeof window !== 'undefined') {
+        window.history.pushState({ section: 'inicio' }, '', '#origen-de-la-ley')
+      }
+
+      window.setTimeout(() => {
+        const target = document.getElementById('origen-de-la-ley')
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 50)
+      return
+    }
 
     const mappedSection = id === 'ecosistema' ? 'ecosistema' : isAnchorNav ? 'inicio' : id
 
@@ -120,7 +138,14 @@ export default function Page() {
       id: 'inicio',
       label: 'Inicio',
       icon: '🏠',
-      content: <Overview onNavigate={handleNavClick} />,
+      content: (
+        <Overview
+          onNavigate={handleNavClick}
+          isOriginModalOpen={isOriginModalOpen}
+          onOpenOriginModal={() => setIsOriginModalOpen(true)}
+          onCloseOriginModal={() => setIsOriginModalOpen(false)}
+        />
+      ),
     },
     {
       id: 'ley',
@@ -171,6 +196,7 @@ export default function Page() {
           { id: 'ecosistema', label: 'El ecosistema' },
           { id: 'instrumentos-estrategicos', label: 'Instrumentos' },
           { id: 'ejes-programaticos-permanentes', label: 'Ejes programáticos' },
+          { id: 'noticias', label: 'Noticias' },
         ]}
         activeSection={activeSection}
         setActiveSection={handleNavClick}

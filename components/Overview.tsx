@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ArrowRight,
@@ -29,6 +29,7 @@ import {
   Users,
   Video,
   Wrench,
+  X,
   Zap,
 } from 'lucide-react'
 import { CONCEJAL, MESAS_DEBATE, PODCAST_EPISODES } from '@/lib/home-content'
@@ -39,27 +40,33 @@ import VideoThumbnail from '@/components/VideoThumbnail'
 const HERO_CLIPS = [
   {
     id: 'presentacion',
-    title: 'Presentación del Proyecto de Ley',
-    duration: '5:04',
-    youtubeUrl: 'https://youtu.be/dznTVPyGeac?si=VkE-MUTtkIE5o9Ld',
-  },
-  {
-    id: 'sesion',
-    title: 'Sesión del Concejo Municipal',
-    duration: '6:05',
-    youtubeUrl: 'https://youtu.be/94yHixczYaQ?si=7VJ1w2xunSF-bBn4',
+    title: '¿Cómo funcionará el Consejo Municipal de Innovación de Tarija?',
+    duration: '3:06',
+    youtubeUrl: 'https://youtu.be/WCNXOwngRHk',
   },
   {
     id: 'mesa-1',
-    title: 'Mesa 1 · Sector Público y Gobernanza',
-    duration: '4:12',
-    youtubeUrl: 'https://youtu.be/OfFY4_m1qfo?si=Md_6kkWJzRHEeSOP',
+    title: 'Mesa 1 | Gobernanza y Planificación del Ecosistema de Innovación',
+    duration: '0:53',
+    youtubeUrl: 'https://youtu.be/e6XG6gb58Qo',
   },
   {
     id: 'mesa-2',
-    title: 'Mesa 2 · Educación Superior',
-    duration: '3:58',
-    youtubeUrl: 'https://youtu.be/OfFY4_m1qfo?si=Md_6kkWJzRHEeSOP',
+    title: 'Mesa 2 | Talento, Emprendimiento y Programas Municipales',
+    duration: '0:56',
+    youtubeUrl: 'https://youtu.be/gqsh08KK6vY',
+  },
+  {
+    id: 'mesa-3',
+    title: 'Mesa 3 | Instrumentos Estratégicos para la Innovación',
+    duration: '0:54',
+    youtubeUrl: 'https://youtu.be/JBrkHYzaVtM',
+  },
+  {
+    id: 'mesa-4',
+    title: 'Mesa 4 | Implementación, Sostenibilidad y Proyección del Ecosistema',
+    duration: '0:56',
+    youtubeUrl: 'https://youtu.be/PRlOmQkYE9M',
   },
 ]
 
@@ -276,8 +283,83 @@ const SUPPORTERS = [
   { id: 'apoyo-10', name: 'Institución 10', logo: '/logos/institucion-10.png' },
 ]
 
-export default function Overview({ onNavigate }: { onNavigate: (id: string) => void }) {
-const [activeClip, setActiveClip] = useState(0)
+function renderOverviewArticleContent(content: string) {
+  const lines = content.split('\n').filter((line) => line.trim())
+  const elements: React.ReactNode[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+
+    if (line.startsWith('CAPÍTULO')) {
+      elements.push(
+        <div key={`chapter-${i}`} className="border-y-2 border-[#810100] bg-[#fbf0ec] py-6 text-center">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-[#810100]">Sistema Municipal</p>
+          <h3 className="text-2xl font-black text-[#621b27]">{line}</h3>
+        </div>,
+      )
+    } else if (line.match(/^Artículo\s+\d+/)) {
+      const articleMatch = line.match(/^(Artículo\s+\d+)\.?\s*\((.*?)\)(.*)/)
+      if (articleMatch) {
+        elements.push(
+          <div key={`article-${i}`} className="mt-6 mb-4 rounded-xl border-l-4 border-[#810100] bg-gradient-to-r from-[#fbf0ec] to-[#fff5f1] p-4">
+            <div className="flex items-start gap-3">
+              <FileText size={20} className="mt-1 shrink-0 text-[#810100]" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-[#810100]">{articleMatch[1]}</p>
+                <h4 className="text-lg font-bold text-[#621b27]">({articleMatch[2]})</h4>
+              </div>
+            </div>
+          </div>,
+        )
+      }
+    } else if (line.match(/^[IVX]+\./)) {
+      elements.push(
+        <div key={`roman-${i}`} className="ml-4 mt-4 border-l-2 border-[#dfa0a0] pl-4">
+          <p className="text-sm leading-7 text-[#441f25]">
+            <span className="font-bold text-[#810100]">{line.substring(0, line.indexOf('.') + 1)}</span>
+            {line.substring(line.indexOf('.') + 1)}
+          </p>
+        </div>,
+      )
+    } else if (line.match(/^[a-z]\)/)) {
+      elements.push(
+        <div key={`letter-${i}`} className="mt-2 ml-8">
+          <p className="text-sm leading-7 text-[#441f25]">
+            <span className="font-bold text-[#810100]">{line.substring(0, line.indexOf(')') + 1)}</span>
+            {line.substring(line.indexOf(')') + 1)}
+          </p>
+        </div>,
+      )
+    } else if (line.match(/^[A-ZÁÉÍÓÚÑa-záéíóúñ\s]+$/) && line.length > 10 && !line.includes('Artículo') && !line.startsWith('I.')) {
+      elements.push(
+        <div key={`title-${i}`} className="mt-6 mb-4">
+          <h3 className="text-xl font-bold uppercase tracking-wide text-[#621b27]">{line}</h3>
+        </div>,
+      )
+    } else if (line.length > 0) {
+      elements.push(
+        <p key={`text-${i}`} className="text-sm leading-7 text-[#441f25]">
+          {line}
+        </p>,
+      )
+    }
+  }
+
+  return elements
+}
+
+export default function Overview({
+  onNavigate,
+  isOriginModalOpen,
+  onOpenOriginModal,
+  onCloseOriginModal,
+}: {
+  onNavigate: (id: string) => void
+  isOriginModalOpen: boolean
+  onOpenOriginModal: () => void
+  onCloseOriginModal: () => void
+}) {
+  const [activeClip, setActiveClip] = useState(0)
   const [selectedAxis, setSelectedAxis] = useState<string | null>(null)
   const [selectedInstrument, setSelectedInstrument] = useState<string | null>(null)
   const [playingMesa, setPlayingMesa] = useState<string | null>(null)
@@ -289,6 +371,10 @@ const [activeClip, setActiveClip] = useState(0)
   const [selectedArticle, setSelectedArticle] = useState<(typeof articles)[0] | null>(null)
   const [isArticleModalOpen, setArticleModalOpen] = useState(false)
   const concejalCardRef = useRef<HTMLDivElement | null>(null)
+
+  // Formulario "Envíanos un Mensaje" (sección Home, antes de "Con el apoyo de")
+  const [contactPhone, setContactPhone] = useState('')
+  const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   const MESAS_PER_PAGE = 2
   const mesaPageCount = Math.max(1, Math.ceil(MESAS_DEBATE.length / MESAS_PER_PAGE))
@@ -303,14 +389,22 @@ const [activeClip, setActiveClip] = useState(0)
 
   const openConcejalInfo = () => {
     setConcejalInfoOpen(true)
+    onOpenOriginModal()
   }
 
   const closeConcejalInfo = () => {
     setConcejalInfoOpen(false)
+    onCloseOriginModal()
     window.setTimeout(() => {
       concejalCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 100)
   }
+
+  useEffect(() => {
+    if (isOriginModalOpen) {
+      setConcejalInfoOpen(true)
+    }
+  }, [isOriginModalOpen])
 
   // Necesario para que createPortal solo se ejecute en el cliente (document existe)
   useEffect(() => {
@@ -359,6 +453,37 @@ const [activeClip, setActiveClip] = useState(0)
     window.setTimeout(() => {
       setSelectedArticle(null)
     }, 300)
+  }
+
+  // Envío del formulario de contacto ubicado en el Home, antes de "Con el apoyo de"
+  const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setContactStatus('sending')
+
+    const form = event.currentTarget
+    const data = new FormData(form)
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: data.get('nombre'),
+          telefono: data.get('telefono'),
+          email: data.get('email'),
+          asunto: data.get('asunto'),
+          mensaje: data.get('mensaje'),
+        }),
+      })
+
+      if (!response.ok) throw new Error('No se pudo enviar')
+
+      setContactStatus('sent')
+      form.reset()
+      setContactPhone('')
+    } catch (error) {
+      setContactStatus('error')
+    }
   }
 
   // Componente helper para renderizar texto con botones de artículos
@@ -421,7 +546,7 @@ const [activeClip, setActiveClip] = useState(0)
 
       <div className="grid gap-6 lg:grid-cols-2">
               <div
-        id="concejal"
+        id="origen-de-la-ley"
         ref={concejalCardRef}
         className="grid grid-cols-1 gap-6 rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm sm:grid-cols-2 sm:items-center"
       >
@@ -436,7 +561,7 @@ const [activeClip, setActiveClip] = useState(0)
             <img
               src={CONCEJAL.photo}
               alt={CONCEJAL.name}
-              className="aspect-[4/5] w-full border border-[#D8A7A7] object-cover transition group-hover:border-[#810100]"
+              className="aspect-[4/5] w-full border border-[#D8A7A7] object-cover object-top transition group-hover:border-[#810100]"
             />
           </button>
           <div className="flex flex-col">
@@ -447,7 +572,9 @@ const [activeClip, setActiveClip] = useState(0)
 
         {/* Mitad derecha: información + botón */}
         <div className="flex flex-col justify-center gap-4">
-          <h2 id="origen-de-la-ley" className="text-lg font-bold text-[#1E1E1E]">Origen de la Ley: ¿Por qué fue creada?</h2>
+          <h2 className="text-left text-lg font-bold text-[#1E1E1E]">
+            Origen de la Ley: ¿Por qué fue creada?
+          </h2>
           <p className="text-sm leading-relaxed text-gray-600">{CONCEJAL.originSummary}</p>
           <button
             type="button"
@@ -479,8 +606,12 @@ const [activeClip, setActiveClip] = useState(0)
           </button>
         </div>
       </div>
-
       {/* Carrusel de video principal */}
+      <div className="my-4 text-center">
+        <h2 className="text-4xl font-black text-[#621b27] mb-2">Construyamos la Ley</h2>
+        <p className="text-sm text-gray-600 max-w-2xl mx-auto">Conoce los detalles de la Ley Municipal de Innovación a través de videos, presentaciones y recursos audiovisuales.</p>
+      </div>
+
       <div className="flex flex-col gap-4">
         <div className="relative flex items-center justify-center gap-2 sm:gap-4">
           <button
@@ -619,15 +750,14 @@ const [activeClip, setActiveClip] = useState(0)
       <div className="flex flex-col gap-6">
         <div className="flex flex-col bg-white shadow-sm">
           <div className="px-6 py-4">
-            <h2 className="text-lg font-bold text-[#1E1E1E]">Arquitectura Institucional</h2>
-            <p className="text-xs text-gray-500">Las seis dimensiones del Ecosistema Municipal</p>
+            <h2 className="text-lg font-bold text-[#1E1E1E]">ARQUITECTURA DE LEY</h2>
           </div>
 
           <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)]">
             <div className="border-b border-[#D8A7A7] xl:border-r xl:border-b-0">
               <div className="bg-[#1E1E1E] px-5 py-3 text-left text-white">
                 <h3 id="ejes-programaticos-permanentes" className="text-base font-semibold tracking-wide uppercase">Ejes programáticos permanentes</h3>
-                <p className="mt-1 text-[10px] text-white/75">Objetivos</p>
+                <p className="mt-1 text-[10px] text-white/75"></p>
               </div>
               <div className="bg-white">
                 {PROGRAMMATIC_AXES.map((item) => {
@@ -674,6 +804,7 @@ const [activeClip, setActiveClip] = useState(0)
               </div>
             </div>
 
+            {/* ==================== DIAGRAMA "CONSEJO MUNICIPAL DE INNOVACIÓN" (más espaciado) ==================== */}
             <div className="flex flex-col gap-4 p-4 xl:p-6">
               <div className="flex flex-col items-center gap-1 text-center">
                 <h3 id="consejo-municipal-innovacion" className="text-sm font-bold tracking-wide text-[#1E1E1E] uppercase">
@@ -682,65 +813,82 @@ const [activeClip, setActiveClip] = useState(0)
                 <p className="text-[11px] text-gray-500">Estructura y actores del Ecosistema Municipal</p>
               </div>
 
-              <div className="mx-auto w-full max-w-sm">
-                <div className="relative mx-auto h-[400px] w-full">
-                  {/* Etiquetas de arco, igual que en InstitutionalEcosystem */}
+              <div className="rounded-[2rem] border border-[#ead9d3] bg-white px-4 py-6 shadow-[0_20px_60px_rgba(98,27,39,0.08)] sm:px-8 sm:py-8">
+                <div className="relative mx-auto h-[580px] max-w-[700px] sm:h-[620px]">
+                  {/* Botones superiores: Agenda / Plan Municipal (forzados a 3 líneas) */}
                   <button
                     type="button"
-                    onClick={() => onNavigate('ecosistema')}
                     aria-label="Ver Agenda Estratégica de Innovación"
-                    className="absolute left-[2%] top-10 z-10 max-w-[36%] -rotate-[22deg] text-left text-[9px] font-medium leading-3 text-[#8c2432] transition hover:text-[#621b27]"
+                    onClick={() => onNavigate('ecosistema')}
+                    className="absolute left-[3%] top-2 z-10 w-[37%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2.5 text-center text-[11px] font-semibold leading-tight text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
                   >
-                    Agenda Estratégica de Innovación
+                    Agenda<br />Estratégica Anual<br />del Ecosistema
                   </button>
                   <button
                     type="button"
+                    aria-label="Ver Plan Municipal para el Desarrollo del Ecosistema"
                     onClick={() => onNavigate('ecosistema')}
-                    aria-label="Ver Plan Municipal para el Desarrollo de la Innovación"
-                    className="absolute right-[2%] top-10 z-10 max-w-[40%] rotate-[22deg] text-right text-[9px] font-medium leading-3 text-[#8c2432] transition hover:text-[#621b27]"
+                    className="absolute right-[3%] top-2 z-10 w-[37%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2.5 text-center text-[11px] font-semibold leading-tight text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
                   >
-                    Plan Municipal para el Desarrollo de la Innovación
+                    Plan Municipal<br />para el Desarrollo<br />del Ecosistema
                   </button>
 
-                  {/* Arcos decorativos */}
-                  <div className="absolute left-1/2 top-20 h-[110px] w-[92%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#c77d80]" />
-                  <div className="absolute left-1/2 top-[5.5rem] h-[110px] w-[92%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#e4b1ae]" />
+                  {/* Arcos decorativos: más abajo y más pequeños para no chocar con los botones ni el título */}
+                  <div className="absolute left-1/2 top-[14%] h-[100px] w-[84%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#c77d80]" />
+                  <div className="absolute left-1/2 top-[16%] h-[100px] w-[84%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#e4b1ae]" />
+                  <div className="absolute left-1/2 top-[9%] h-7 w-px -translate-x-1/2 bg-[#8c2432]" />
 
-                  {/* Círculo central: Actores */}
+                  <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 700 620" aria-hidden="true">
+                    {/* Flecha hacia "Agenda Estratégica Anual del Ecosistema" (más arriba, más corta) */}
+                <path d="M 185 45 Q 160 25 150 4" stroke="#d39495" strokeWidth="2" fill="none" />
+                <path d="M 150 0 L 142 15 L 158 15 Z" fill="#d39495" />
+
+                <path d="M 515 45 Q 540 25 550 4" stroke="#d39495" strokeWidth="2" fill="none" />
+                <path d="M 550 0 L 542 15 L 558 15 Z" fill="#d39495" />
+                  </svg>
+
+                  {/* Título central: con más espacio respecto al arco */}
+                  <div className="absolute left-1/2 top-[33%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">
+                    Consejo Municipal de Innovación<br />y Emprendimiento
+                  </div>
+
+                  {/* Círculo "Actores" */}
                   <button
                     type="button"
                     onClick={() => onNavigate('ecosistema')}
                     aria-label="Ver Actores"
-                    className="absolute left-1/2 top-[32%] flex h-32 w-32 -translate-x-1/2 flex-col items-center justify-center rounded-full border-2 border-[#8c2432] bg-[#8c2432] text-white shadow-[0_10px_20px_rgba(140,36,50,0.2)] transition hover:scale-[1.03]"
+                    className="absolute left-1/2 top-[43%] flex h-44 w-44 -translate-x-1/2 flex-col items-center justify-center rounded-full border-[3px] border-[#8c2432] bg-[#8c2432] text-white shadow-[0_14px_28px_rgba(140,36,50,0.2)] transition hover:scale-[1.02] sm:h-48 sm:w-48"
                   >
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Actores</span>
-                    <div className="mt-2 grid grid-cols-3 gap-1">
+                    <span className="text-xs font-bold uppercase tracking-[0.28em]">Actores</span>
+                    <div className="mt-5 grid grid-cols-3 gap-2">
                       {[Building2, Briefcase, GraduationCap, Handshake, Target, Users].map((Icon, index) => (
-                        <span key={index} className="flex h-5 w-5 items-center justify-center rounded-md bg-[#a94d5b]">
-                          <Icon size={11} aria-hidden="true" />
+                        <span key={index} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#a94d5b] sm:h-10 sm:w-10">
+                          <Icon size={17} aria-hidden="true" />
                         </span>
                       ))}
                     </div>
                   </button>
 
-                  {/* Líneas hacia los 3 sub-círculos */}
-                  <div className="absolute left-[22%] top-[68%] h-14 w-[26%] -rotate-[25deg] border-t border-[#d39495]" />
-                  <div className="absolute left-1/2 top-[68%] h-14 -translate-x-1/2 border-l border-[#d39495]" />
-                  <div className="absolute right-[22%] top-[68%] h-14 w-[26%] rotate-[25deg] border-t border-[#d39495]" />
+                  {/* Líneas hacia los círculos inferiores */}
+                  <div className="absolute left-[18%] top-[74%] h-16 w-[31%] -rotate-[22deg] border-t border-[#d39495]" />
+                  <div className="absolute left-1/2 top-[74%] h-16 -translate-x-1/2 border-l border-[#d39495]" />
+                  <div className="absolute right-[18%] top-[74%] h-16 w-[31%] rotate-[22deg] border-t border-[#d39495]" />
 
+                  {/* Círculos inferiores: Secretaría / Observatorio / Mesas */}
                   {[
-                    { id: 'secretaria', label: 'Secretaría Técnica', Icon: Building2, position: 'left-[2%]' },
-                    { id: 'observatorio', label: 'Observatorio Municipal', Icon: Eye, position: 'left-1/2 -translate-x-1/2' },
-                    { id: 'mesas', label: 'Mesas Técnicas', Icon: Users, position: 'right-[2%]' },
-                  ].map(({ id, label, Icon, position }) => (
+                    ['secretaria', 'Secretaría', 'Técnica', Building2, 'left-[4%]'],
+                    ['observatorio', 'Observatorio', 'Municipal', Eye, 'left-1/2 -translate-x-1/2'],
+                    ['mesas', 'Mesas', 'Técnicas', Users, 'right-[4%]'],
+                  ].map(([id, line1, line2, Icon, position]) => (
                     <button
-                      key={id}
+                      key={id as string}
                       type="button"
                       onClick={() => onNavigate('ecosistema')}
-                      className={`absolute ${position} top-[84%] flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-full border-2 border-[#dfa0a0] bg-white px-1 text-center text-[9px] font-semibold text-[#241f20] shadow-sm transition hover:-translate-y-1 hover:bg-[#fff5f1]`}
+                      className={`absolute ${position} top-[88%] flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-[#dfa0a0] bg-[#fffdfb] text-[10px] font-semibold text-[#241f20] shadow-sm transition hover:-translate-y-1 hover:bg-[#fff5f1] sm:h-24 sm:w-24`}
                     >
-                      <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
-                      <span className="leading-tight">{label}</span>
+                      <Icon size={21} className="mb-2" strokeWidth={1.8} aria-hidden="true" />
+                      <span>{line1 as string}</span>
+                      <span>{line2 as string}</span>
                     </button>
                   ))}
                 </div>
@@ -755,6 +903,7 @@ const [activeClip, setActiveClip] = useState(0)
                 <ArrowUpRight aria-hidden="true" size={14} />
               </button>
             </div>
+            {/* ==================== FIN DIAGRAMA ==================== */}
 
             <div className="border-t border-[#D8A7A7] xl:border-l xl:border-t-0">
               <div className="bg-[#1E1E1E] px-5 py-3 text-left text-white">
@@ -762,7 +911,7 @@ const [activeClip, setActiveClip] = useState(0)
                   Instrumentos Estratégicos
                 </h3>
                 <p className="mt-1 text-[10px] text-white/75">
-                  Estrategias
+                 
                 </p>
               </div>
               <div className="bg-white">
@@ -812,6 +961,8 @@ const [activeClip, setActiveClip] = useState(0)
           </div>
 
         </div>
+
+       
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Mesas de Debate — carrusel de 2 videos */}
@@ -1089,6 +1240,101 @@ const [activeClip, setActiveClip] = useState(0)
         </div>
       </div>
 
+      {/* Envíanos un Mensaje — layout horizontal (Nombre/Teléfono, Email, Asunto | Mensaje + botón) */}
+      <div className="rounded-xl border border-[#D8A7A7] bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="mb-6 text-2xl font-bold text-[#1E1E1E]">Envíanos un Mensaje</h2>
+        <form onSubmit={handleContactSubmit} className="grid gap-6 lg:grid-cols-2">
+          {/* Columna izquierda: Nombre + Teléfono, Email, Asunto */}
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-[#1E1E1E]">Nombre</label>
+                <input
+                  type="text"
+                  name="nombre"
+                  required
+                  className="w-full rounded-lg border border-[#D8A7A7] bg-[#F8F1E7] px-4 py-2 text-[#1E1E1E] placeholder-gray-500 focus:border-[#7A1F2B] focus:outline-none"
+                  placeholder="Tu nombre"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-[#1E1E1E]">Teléfono / Celular</label>
+                <div className="flex overflow-hidden rounded-lg border border-[#D8A7A7] bg-[#F8F1E7] focus-within:border-[#7A1F2B]">
+                  <span className="flex items-center border-r border-[#D8A7A7] px-3 text-sm font-semibold text-[#5B0F18]">
+                    +591
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    required
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                    className="w-full bg-transparent px-4 py-2 text-[#1E1E1E] placeholder-gray-500 outline-none"
+                    placeholder="70000000"
+                  />
+                </div>
+                {/* Campo real que se envía en el formulario, ya con el prefijo incluido */}
+                <input type="hidden" name="telefono" value={contactPhone ? `+591 ${contactPhone}` : ''} />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[#1E1E1E]">Email</label>
+              <input
+                type="email"
+                name="email"
+                required
+                className="w-full rounded-lg border border-[#D8A7A7] bg-[#F8F1E7] px-4 py-2 text-[#1E1E1E] placeholder-gray-500 focus:border-[#7A1F2B] focus:outline-none"
+                placeholder="tu@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[#1E1E1E]">Asunto</label>
+              <input
+                type="text"
+                name="asunto"
+                required
+                className="w-full rounded-lg border border-[#D8A7A7] bg-[#F8F1E7] px-4 py-2 text-[#1E1E1E] placeholder-gray-500 focus:border-[#7A1F2B] focus:outline-none"
+                placeholder="Asunto del mensaje"
+              />
+            </div>
+          </div>
+
+          {/* Columna derecha: Mensaje (grande) + botón debajo */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-1 flex-col">
+              <label className="mb-2 block text-sm font-semibold text-[#1E1E1E]">Mensaje</label>
+              <textarea
+                name="mensaje"
+                required
+                className="min-h-[160px] w-full flex-1 resize-none rounded-lg border border-[#D8A7A7] bg-[#F8F1E7] px-4 py-2 text-[#1E1E1E] placeholder-gray-500 focus:border-[#7A1F2B] focus:outline-none"
+                placeholder="Tu mensaje"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={contactStatus === 'sending'}
+              className="w-full rounded-lg bg-gradient-to-r from-[#5B0F18] to-[#7A1F2B] px-6 py-3 font-semibold text-white transition-all hover:shadow-lg disabled:opacity-60"
+            >
+              {contactStatus === 'sending' ? 'Enviando...' : 'Enviar Mensaje'}
+            </button>
+
+            {contactStatus === 'sent' && (
+              <p className="text-sm font-semibold text-green-700">
+                ¡Mensaje enviado! Te responderemos a la brevedad.
+              </p>
+            )}
+            {contactStatus === 'error' && (
+              <p className="text-sm font-semibold text-red-700">
+                Hubo un problema al enviar tu mensaje. Intenta de nuevo en unos minutos.
+              </p>
+            )}
+          </div>
+        </form>
+      </div>
+
       {/* Con el apoyo de */}
       <div className="flex flex-col gap-6 rounded-xl bg-white p-6 shadow-sm">
         <div className="text-center">
@@ -1151,20 +1397,18 @@ const [activeClip, setActiveClip] = useState(0)
                     <h2 className="max-w-2xl text-xl font-bold text-[#1E1E1E] sm:text-2xl">{CONCEJAL_MODAL_HEADING}</h2>
                   </div>
 
-                  <div className="float-left mb-4 mr-6 w-36 sm:w-40">
-                    {/* Foto del Concejal: sube el archivo a /public/concejal-renan.jpg (o el nombre que uses)
-                        y actualiza CONCEJAL.photo en lib/home-content.ts con esa ruta, ej: '/concejal-renan.jpg' */}
-                    <img
-                      src={CONCEJAL.photo}
-                      alt={CONCEJAL.name}
-                      className="aspect-square w-full rounded-lg border border-[#e8dede] object-cover"
-                    />
-                    <div className="mt-2 text-left">
-                      <p className="text-xs font-bold leading-tight text-[#1E1E1E]">{CONCEJAL.name}</p>
-                      <p className="mt-0.5 text-xs leading-tight text-gray-600">{CONCEJAL.role}</p>
-                      <p className="text-xs leading-tight text-gray-600">Concejo Municipal de Tarija</p>
-                    </div>
-                  </div>
+              <div className="float-left mb-4 mr-6 w-36 sm:w-40">
+                <img
+                  src={CONCEJAL.photo}
+                  alt={CONCEJAL.name}
+                  className="aspect-square w-full rounded-lg border border-[#e8dede] bg-[#f8f1e7] object-contain"
+                />
+                <div className="mt-2 text-left">
+                  <p className="text-xs font-bold leading-tight text-[#1E1E1E]">{CONCEJAL.name}</p>
+                  <p className="mt-0.5 text-xs leading-tight text-gray-600">{CONCEJAL.role}</p>
+                  <p className="text-xs leading-tight text-gray-600">Concejo Municipal de Tarija</p>
+                </div>
+              </div>
 
                   {/* Entradilla: primer párrafo destacado para dar entrada a la lectura */}
                   <p className="mb-4 text-justify text-[15px] font-medium leading-relaxed text-[#5B0F18]">
@@ -1212,37 +1456,36 @@ const [activeClip, setActiveClip] = useState(0)
       {isMounted && isArticleModalOpen && selectedArticle
         ? createPortal(
             <div
-              className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-6 sm:px-6"
+              className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/60 px-4 py-6 sm:px-6"
               onClick={closeArticleModal}
             >
               <div
-                className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl"
+                className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
                   type="button"
                   onClick={closeArticleModal}
                   aria-label="Cerrar"
-                  className="sticky top-4 right-4 z-10 rounded-full border border-[#e8dede] bg-white px-3 py-2 text-sm font-semibold text-[#1E1E1E] shadow-sm transition hover:bg-[#f9f9f9]"
+                  className="sticky top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#810100] text-white shadow-lg transition hover:bg-[#630000]"
                 >
-                  Cerrar
+                  <X size={20} />
                 </button>
 
-                <div className="p-6 sm:p-8">
-                  <div className="mb-6 flex flex-col gap-2">
-                    <span className="h-1 w-12 rounded-full bg-[#810100]" />
-                    <h2 className="text-2xl font-bold text-[#621b27] sm:text-3xl">
-                      Artículos {selectedArticle.range}
+                <div className="p-6 sm:p-10">
+                  <div className="mb-8 text-center">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-[#8c2432]">
+                      Artículos
+                    </p>
+                    <h2 className="mb-2 text-3xl font-black text-[#621b27]">
+                      {selectedArticle.range}
                     </h2>
-                    <p className="text-base font-semibold text-[#810100]">{selectedArticle.title}</p>
+                    <p className="text-lg font-bold text-[#810100]">{selectedArticle.title}</p>
+                    <div className="mx-auto mt-4 h-1 w-16 rounded-full bg-[#810100]" />
                   </div>
 
-                  <div className="prose prose-sm max-w-none text-gray-700">
-                    {selectedArticle.content.split('\n\n').map((paragraph, index) => (
-                      <p key={index} className="mb-4 whitespace-pre-wrap leading-relaxed text-sm">
-                        {paragraph}
-                      </p>
-                    ))}
+                  <div className="space-y-6">
+                    {renderOverviewArticleContent(selectedArticle.content)}
                   </div>
                 </div>
               </div>

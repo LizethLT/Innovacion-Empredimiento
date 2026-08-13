@@ -162,15 +162,38 @@ export default function InteractiveEcosystem() {
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:items-start">
           <div className="rounded-[2rem] border border-[#ead9d3] bg-white px-4 py-7 shadow-[0_20px_60px_rgba(98,27,39,0.08)] sm:px-8 sm:py-10">
             <div className="relative mx-auto h-[600px] max-w-[700px] sm:h-[650px]">
-              <button type="button" aria-label="Ver Agenda Estratégica de Innovación" onClick={() => handleSelect('agenda')} className="absolute left-[5%] top-2 z-10 max-w-[38%] -rotate-[25deg] text-left text-[10px] leading-4 text-[#8c2432] no-underline transition hover:text-[#621b27] sm:text-xs">Agenda Estratégica Anual del Ecosistema</button>
-              <button type="button" aria-label="Ver Plan Municipal para el Desarrollo del Ecosistema" onClick={() => handleSelect('plan')} className="absolute right-[3%] top-2 z-10 max-w-[42%] rotate-[25deg] text-right text-[10px] leading-4 text-[#8c2432] no-underline transition hover:text-[#621b27] sm:text-xs">Plan Municipal para el Desarrollo del Ecosistema</button>
-              <div className="absolute left-1/2 top-5 h-[185px] w-[88%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#c77d80]"
-              /><div className="absolute left-1/2 top-8 h-[185px] w-[88%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#e4b1ae]" />
-              <div className="absolute left-1/2 top-1 h-3 w-px -translate-x-1/2 bg-[#8c2432]" />
+              <button
+                type="button"
+                aria-label="Ver Agenda Estratégica de Innovación"
+                onClick={() => handleSelect('agenda')}
+                className="absolute left-[4%] top-3 z-10 w-[34%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2 text-center text-[10px] font-semibold leading-4 text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
+              >
+                Agenda Estratégica Anual del Ecosistema
+              </button>
+              <button
+                type="button"
+                aria-label="Ver Plan Municipal para el Desarrollo del Ecosistema"
+                onClick={() => handleSelect('plan')}
+                className="absolute right-[4%] top-3 z-10 w-[34%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2 text-center text-[10px] font-semibold leading-4 text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
+              >
+                Plan Municipal para el Desarrollo del Ecosistema
+              </button>
+              <div className="absolute left-1/2 top-[12%] h-[155px] w-[88%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#c77d80]"
+              /><div className="absolute left-1/2 top-[14%] h-[155px] w-[88%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#e4b1ae]" />
+              <div className="absolute left-1/2 top-[10%] h-3 w-px -translate-x-1/2 bg-[#8c2432]" />
 
-              <div className="absolute left-1/2 top-[17%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">Consejo Municipal de Innovación<br />y Emprendimiento</div>
+              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 700 650" aria-hidden="true">
+                {/* Flecha hacia "Agenda Estratégica Anual del Ecosistema" */}
+                <path d="M 185 150 Q 145 95 138 64" stroke="#d39495" strokeWidth="2" fill="none" />
+                <path d="M 138 60 L 130 76 L 146 76 Z" fill="#d39495" />
+                {/* Flecha hacia "Plan Municipal para el Desarrollo del Ecosistema" */}
+                <path d="M 515 150 Q 555 95 562 64" stroke="#d39495" strokeWidth="2" fill="none" />
+                <path d="M 562 60 L 554 76 L 570 76 Z" fill="#d39495" />
+              </svg>
 
-              <button type="button" onClick={() => handleSelect('actores')} aria-label="Ver Actores" className={`absolute left-1/2 top-[29%] flex h-52 w-52 -translate-x-1/2 flex-col items-center justify-center rounded-full border-[3px] border-[#8c2432] bg-[#8c2432] text-white shadow-[0_14px_28px_rgba(140,36,50,0.2)] transition hover:scale-[1.02] sm:h-60 sm:w-60 ${selectedId === 'actores' ? 'ring-4 ring-[#edc7c4] ring-offset-4' : ''}`}>
+              <div className="absolute left-1/2 top-[16%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">Consejo Municipal de Innovación<br />y Emprendimiento</div>
+
+              <button type="button" onClick={() => handleSelect('actores')} aria-label="Ver Actores" className={`absolute left-1/2 top-[28%] flex h-52 w-52 -translate-x-1/2 flex-col items-center justify-center rounded-full border-[3px] border-[#8c2432] bg-[#8c2432] text-white shadow-[0_14px_28px_rgba(140,36,50,0.2)] transition hover:scale-[1.02] sm:h-60 sm:w-60 ${selectedId === 'actores' ? 'ring-4 ring-[#edc7c4] ring-offset-4' : ''}`}>
                 <span className="text-xs font-bold uppercase tracking-[0.28em]">Actores</span>
                 <div className="mt-5 grid grid-cols-3 gap-2">{actorIcons.map((Icon, index) => <span key={index} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#a94d5b] sm:h-10 sm:w-10"><Icon size={17} aria-hidden="true" /></span>)}</div>
               </button>
