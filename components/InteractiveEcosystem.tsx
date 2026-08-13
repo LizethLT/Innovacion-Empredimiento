@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users, X, Book, FileText, Gavel } from 'lucide-react'
+import { ArrowUpLeft, ArrowUpRight, Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users, X, Book, FileText, Gavel } from 'lucide-react'
 import { articles, getArticleByRange } from '@/lib/articles'
 
 const ITEMS = [
