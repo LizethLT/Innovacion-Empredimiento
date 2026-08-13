@@ -24,6 +24,22 @@ const DEFAULT_CENTER_SECTIONS = [
   { id: 'ejes', label: 'Ejes Programáticos' },
 ]
 
+// Orden fijo deseado para el panel de secciones en mobile.
+// ⚠️ Verifica que estos ids coincidan con los que usas en `sections` / `centerSections`
+// (por ejemplo en page.tsx). Si el id de "¿Qué es la Ley?" es distinto a
+// 'que-es-la-ley', ajústalo aquí.
+const MOBILE_SECTIONS_ORDER = [
+  'inicio',
+  'origen',
+  'que-es-la-ley',
+  'ecosistema',
+  'instrumentos',
+  'ejes',
+  'noticias',
+  'videos',
+  'biblioteca',
+]
+
 export default function Header({
   mobileMenuOpen,
   setMobileMenuOpen,
@@ -41,16 +57,25 @@ export default function Header({
   // Secciones del dropdown de ícono (todas menos "contacto")
   const navSections = sections.filter((section) => section.id !== 'contacto')
 
-  // FIX #2: en mobile/tablet los "centerSections" (Origen de la Ley, Ecosistema,
-  // Instrumentos, Ejes Programáticos) están ocultos porque su <nav> es "hidden md:flex".
-  // Antes nunca se agregaban al menú hamburguesa, así que eran invisibles por debajo
-  // de md. Los combinamos aquí (sin duplicar ids) para que sí aparezcan en ESE panel.
-  const mobileSections = [
-    ...centerSections,
-    ...navSections.filter(
-      (section) => !centerSections.some((c) => c.id === section.id)
-    ),
-  ]
+  // Panel de mobile: combina centerSections + navSections (sin duplicar ids) y
+  // luego las reordena según MOBILE_SECTIONS_ORDER. Cualquier sección que no
+  // esté en esa lista de orden queda al final, en el orden en que llegó.
+  const allSectionsMap = new Map<string, { id: string; label: string }>()
+  ;[...centerSections, ...navSections].forEach((section) => {
+    if (!allSectionsMap.has(section.id)) {
+      allSectionsMap.set(section.id, section)
+    }
+  })
+
+  const orderedKnown = MOBILE_SECTIONS_ORDER
+    .map((id) => allSectionsMap.get(id))
+    .filter((section): section is { id: string; label: string } => Boolean(section))
+
+  const remaining = Array.from(allSectionsMap.values()).filter(
+    (section) => !MOBILE_SECTIONS_ORDER.includes(section.id)
+  )
+
+  const mobileSections = [...orderedKnown, ...remaining]
 
   const handleNavClick = (id: string) => {
     setActiveSection(id)
@@ -240,8 +265,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Mobile Sections Menu — usa mobileSections (incluye
-            Origen de la Ley, Instrumentos, Ejes Programáticos, etc.) */}
+        {/* Mobile Sections Menu — orden fijo definido en MOBILE_SECTIONS_ORDER */}
         {mobileMenuOpen && (
           <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-white/20 pt-4">
             <p className="px-3 text-xs font-bold text-white/70 uppercase tracking-wider mb-3">Secciones</p>
