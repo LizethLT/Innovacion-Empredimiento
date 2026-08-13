@@ -63,7 +63,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // Calcular unviewedCount cuando cambien las noticias visualizadas
   useEffect(() => {
-    // Este efecto se ejecutará cuando se carguen las noticias desde el API
     const updateUnviewedCount = () => {
       fetch('/api/noticias')
         .then(res => res.json())
@@ -76,7 +75,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
 
     updateUnviewedCount()
-    const interval = setInterval(updateUnviewedCount, 5000) // Actualizar cada 5 segundos
+    const interval = setInterval(updateUnviewedCount, 5000)
 
     return () => clearInterval(interval)
   }, [viewedNoticias])

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Bell } from 'lucide-react'
+import { useNotifications } from '@/context/NotificationContext'
 
 interface HeaderProps {
   mobileMenuOpen: boolean
@@ -24,11 +25,6 @@ const DEFAULT_CENTER_SECTIONS = [
   { id: 'ejes', label: 'Ejes Programáticos' },
 ]
 
-// Orden fijo deseado para el panel de secciones en mobile.
-// Se compara por LABEL normalizado (sin tildes, minúsculas, sin espacios extra)
-// en vez de por `id`, porque los ids reales usados en page.tsx no siempre
-// coinciden exactamente con los que se puedan suponer aquí. Comparar por label
-// es más robusto: el texto visible es el que conocemos con certeza.
 const MOBILE_LABEL_ORDER = [
   'inicio',
   'origen de la ley',
@@ -41,9 +37,6 @@ const MOBILE_LABEL_ORDER = [
   'biblioteca',
 ]
 
-// Dropdown de escritorio (ícono ☰ junto a "Contacto"): solo estas secciones,
-// en este orden. Las demás (Origen, Instrumentos, Ejes, Noticias) ya están
-// visibles en la barra central de desktop, así que no hace falta repetirlas acá.
 const DESKTOP_DROPDOWN_LABEL_ORDER = [
   'inicio',
   'que es la ley',
@@ -52,12 +45,11 @@ const DESKTOP_DROPDOWN_LABEL_ORDER = [
   'biblioteca',
 ]
 
-// Normaliza: minúsculas, sin tildes/diacríticos, sin signos ¿ ?, espacios colapsados.
 function normalizeLabel(label: string): string {
   return label
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[¿?]/g, '')
     .trim()
     .replace(/\s+/g, ' ')
@@ -75,15 +67,13 @@ export default function Header({
   const mobileMenuRef = useRef<HTMLDivElement | null>(null)
   const mobilePanelRef = useRef<HTMLDivElement | null>(null)
 
+  // Obtenemos el contador de notificaciones no leídas del contexto
+  const { unviewedCount } = useNotifications()
+
   const mobileButtonLabel = mobileMenuOpen ? 'Cerrar menú de secciones' : 'Abrir menú de secciones'
 
-  // Secciones del dropdown de ícono (todas menos "contacto")
   const navSections = sections.filter((section) => section.id !== 'contacto')
 
-  // Panel de mobile: combina centerSections + navSections (sin duplicar ids) y
-  // luego las reordena según MOBILE_LABEL_ORDER (comparando por label normalizado).
-  // Cualquier sección que no esté en esa lista de orden queda al final, en el
-  // orden en que llegó.
   const allSectionsMap = new Map<string, { id: string; label: string }>()
   ;[...centerSections, ...navSections].forEach((section) => {
     if (!allSectionsMap.has(section.id)) {
@@ -104,8 +94,6 @@ export default function Header({
 
   const mobileSections = [...orderedKnown, ...remaining]
 
-  // Dropdown de escritorio: solo las secciones de DESKTOP_DROPDOWN_LABEL_ORDER,
-  // en ese orden (no incluye "remaining" — es una lista cerrada, no todas las secciones).
   const desktopDropdownSections = DESKTOP_DROPDOWN_LABEL_ORDER
     .map((wantedLabel) =>
       allSectionsList.find((section) => normalizeLabel(section.label) === wantedLabel)
@@ -145,9 +133,6 @@ export default function Header({
       }
     }
 
-    // En desktop, hacer scroll con la rueda del mouse no dispara mousedown ni
-    // touchmove, así que el dropdown se quedaba abierto. Lo cerramos también
-    // al detectar scroll de la página.
     const handleScroll = () => {
       setMobileMenuOpen(false)
     }
@@ -156,12 +141,6 @@ export default function Header({
     document.addEventListener('touchstart', handleOutsideClick)
     document.addEventListener('touchmove', handleOutsideTouchMove)
 
-    // FIX #3: al abrir el panel dentro del header (que es "sticky"), el contenido
-    // de la página se empuja hacia abajo. Si no estás en el tope, el navegador
-    // ajusta el scroll para compensar ese empuje (scroll anchoring) y eso disparaba
-    // un evento "scroll" que cerraba el menú de inmediato. Retrasamos la activación
-    // del listener de scroll para que ese ajuste automático no cuente como "el
-    // usuario quiso cerrar el menú".
     let scrollListenerActive = false
     const scrollListenerTimeout = window.setTimeout(() => {
       scrollListenerActive = true
@@ -192,7 +171,6 @@ export default function Header({
               aria-label="Ir al inicio"
               title="Ir al inicio"
             >
-              {/* Imagen del logo */}
               <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary shadow-md">
                 <img
                   src="/logo.jpeg"
@@ -203,9 +181,6 @@ export default function Header({
                   }}
                 />
               </div>
-              {/* Brand Text — FIX #1: antes tenía "hidden sm:block" y nunca se veía
-                  en celulares. Ahora siempre es visible; solo el subtítulo se oculta
-                  en pantallas muy chicas para no saturar el header. */}
               <div className="block">
                 <div className="flex items-baseline gap-1">
                   <span className="text-base sm:text-lg font-bold text-white">Impulsa</span>
@@ -218,7 +193,7 @@ export default function Header({
             </button>
           </div>
 
-          {/* Secciones destacadas (centro) - Origen de la Ley / Ecosistema / Instrumentos / Ejes */}
+          {/* Secciones destacadas (centro) */}
           <nav className="hidden md:flex flex-1 items-center justify-center gap-1 lg:gap-2 px-4">
             {centerSections.map((section) => (
               <button
@@ -236,11 +211,29 @@ export default function Header({
             ))}
           </nav>
 
-          {/* Spacer (solo cuando el nav central está oculto, en pantallas < md) */}
           <div className="flex-1 md:hidden"></div>
 
-          {/* Secciones (icono, dropdown) + Contacto */}
+          {/* Secciones (icono, dropdown) + Campana de Notificaciones + Contacto */}
           <div className="flex items-center gap-2 shrink-0">
+            
+            {/* Campana de Notificaciones */}
+            <div className="relative inline-flex items-center justify-center p-2">
+              <button
+                type="button"
+                onClick={() => handleNavClick('noticias')}
+                className="relative flex items-center justify-center p-1.5 rounded-md text-white hover:bg-white/10 transition-all cursor-pointer"
+                title="Notificaciones de noticias"
+                aria-label="Notificaciones de noticias"
+              >
+                <Bell size={20} />
+                {unviewedCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-bold text-white shadow-sm ring-1 ring-[#810100] animate-pulse">
+                    {unviewedCount > 9 ? '9+' : unviewedCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
             <div ref={sectionMenuRef} className="relative hidden sm:block">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -282,7 +275,7 @@ export default function Header({
               Contacto
             </button>
 
-            {/* Mobile Menu Button - para pantallas pequeñas */}
+            {/* Mobile Menu Button */}
             <div ref={mobileMenuRef} className="relative md:hidden">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -300,7 +293,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Mobile Sections Menu — orden fijo definido en MOBILE_LABEL_ORDER */}
+        {/* Mobile Sections Menu */}
         {mobileMenuOpen && (
           <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-white/20 pt-4">
             <p className="px-3 text-xs font-bold text-white/70 uppercase tracking-wider mb-3">Secciones</p>
