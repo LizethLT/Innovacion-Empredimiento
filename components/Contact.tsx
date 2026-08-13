@@ -20,6 +20,10 @@ const mockNews = [
   }
 ]
 
+// Cuánto tiempo (en ms) se mantiene visible el aviso de "nuevas noticias"
+// antes de marcarlas automáticamente como vistas. Ajustable a gusto.
+const AUTO_MARK_AS_READ_DELAY = 4000
+
 export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [phone, setPhone] = useState('')
@@ -34,22 +38,45 @@ export default function Contact() {
   useEffect(() => {
     // Confirmamos que estamos en el cliente y cargamos el almacenamiento local de golpe
     setIsClient(true)
-    
+
     const savedSubscription = localStorage.getItem('news_subscribed')
     if (savedSubscription === 'true') {
       setIsSubscribed(true)
     }
 
-    const savedViewedNews = JSON.parse(localStorage.getItem('viewed_news') || '[]')
+    const savedViewedNews: string[] = JSON.parse(localStorage.getItem('viewed_news') || '[]')
     setViewedNews(savedViewedNews)
+
+    // Si hay noticias que el usuario todavía no vio, le mostramos el aviso
+    // (la campanita con el contador) y, pasado un tiempo, las marcamos
+    // automáticamente como vistas. Así el aviso solo depende de "entrar a
+    // la sección", no de hacer clic en "Ver noticia".
+    const unreadIds = mockNews
+      .map((n) => n.id)
+      .filter((id) => !savedViewedNews.includes(id))
+
+    if (unreadIds.length > 0) {
+      const timer = setTimeout(() => {
+        setViewedNews((prev) => {
+          const updated = Array.from(new Set([...prev, ...unreadIds]))
+          localStorage.setItem('viewed_news', JSON.stringify(updated))
+          return updated
+        })
+      }, AUTO_MARK_AS_READ_DELAY)
+
+      return () => clearTimeout(timer)
+    }
   }, [])
 
+  // Se mantiene por si además querés marcarla como vista al tocar el link
+  // (por ejemplo, si el usuario hace clic antes de que pase el delay).
   const handleViewNews = (newsId: string) => {
-    if (!viewedNews.includes(newsId)) {
-      const updatedViewed = [...viewedNews, newsId]
-      setViewedNews(updatedViewed)
-      localStorage.setItem('viewed_news', JSON.stringify(updatedViewed))
-    }
+    setViewedNews((prev) => {
+      if (prev.includes(newsId)) return prev
+      const updated = [...prev, newsId]
+      localStorage.setItem('viewed_news', JSON.stringify(updated))
+      return updated
+    })
   }
 
   const contactMethods = [
@@ -132,7 +159,7 @@ export default function Contact() {
   return (
     <section id="contacto" className="py-20 px-4 bg-gradient-to-br from-[#F8F1E7] to-white">
       <div className="max-w-6xl mx-auto">
-        
+
         {/* Sección de Noticias */}
         <div className="mb-16">
           <div className="flex items-center justify-between mb-8">
@@ -140,7 +167,7 @@ export default function Contact() {
               <h3 className="text-2xl font-bold text-[#1E1E1E]">Noticias y Actualidad</h3>
               <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
             </div>
-            
+
             {/* Si no es cliente, no renderizamos nada temporalmente para evitar parpadeo */}
             {isClient && mockNews.some(n => !viewedNews.includes(n.id)) && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
@@ -175,7 +202,7 @@ export default function Contact() {
                     <span className="text-xs font-bold text-[#7A1F2B]">{news.category}</span>
                     <span className="text-xs text-gray-400 ml-3">{news.date}</span>
                     <h4 className="font-bold text-[#1E1E1E] mt-2 mb-4">{news.title}</h4>
-                    
+
                     <a
                       href={news.link}
                       onClick={() => handleViewNews(news.id)}
@@ -201,7 +228,7 @@ export default function Contact() {
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           {contactMethods.map((method, index) => {
             const Icon = method.icon
-            
+
             const cardContent = (
               <>
                 <div className="w-12 h-12 bg-gradient-to-br from-[#5B0F18] to-[#7A1F2B] rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -375,7 +402,7 @@ export default function Contact() {
             <div className="bg-[#F8F1E7] border border-[#D8A7A7] rounded-lg p-6">
               <h4 className="font-bold text-[#1E1E1E] mb-2">Suscríbete a Noticias</h4>
               <p className="text-sm text-gray-600 mb-4">Recibe una notificación cada vez que se publique una noticia o video nuevo</p>
-              
+
               {isSubscribed ? (
                 <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 p-3 rounded-lg text-sm font-semibold">
                   <CheckCircle size={20} />
