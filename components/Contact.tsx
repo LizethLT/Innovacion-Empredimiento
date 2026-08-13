@@ -27,25 +27,21 @@ export default function Contact() {
 
   const [newsEmail, setNewsEmail] = useState('')
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
-  
-  // Inicializamos directamente leyendo el localStorage para evitar el parpadeo de renderizado
-  const [isSubscribed, setIsSubscribed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('news_subscribed') === 'true'
-    }
-    return false
-  })
+  const [isSubscribed, setIsSubscribed] = useState(false)
 
-  const [viewedNews, setViewedNews] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      return JSON.parse(localStorage.getItem('viewed_news') || '[]')
-    }
-    return []
-  })
-
+  const [viewedNews, setViewedNews] = useState<string[]>([])
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    const savedSubscription = localStorage.getItem('news_subscribed')
+    if (savedSubscription === 'true') {
+      setIsSubscribed(true)
+    }
+
+    const savedViewedNews = JSON.parse(localStorage.getItem('viewed_news') || '[]')
+    setViewedNews(savedViewedNews)
+    
+    // Activamos el montaje para renderizar las etiquetas sin parpadeo
     setIsMounted(true)
   }, [])
 
@@ -146,7 +142,7 @@ export default function Contact() {
               <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
             </div>
             
-            {/* Aviso general de la campanita */}
+            {/* Si aún no monta, ocultamos el bloque para prevenir parpadeos */}
             {isMounted && mockNews.some(n => !viewedNews.includes(n.id)) && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
                 <Bell size={14} /> Tienes nuevas noticias
@@ -154,33 +150,43 @@ export default function Contact() {
             )}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {mockNews.map((news) => {
-              // Ahora se evalúa instantáneamente con el valor guardado, sin parpadeos
-              const isNew = !viewedNews.includes(news.id)
-
-              return (
-                <div key={news.id} className="relative bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-md transition-all">
-                  {isNew && (
-                    <span className="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                      ¡NUEVA!
-                    </span>
-                  )}
-                  <span className="text-xs font-bold text-[#7A1F2B]">{news.category}</span>
-                  <span className="text-xs text-gray-400 ml-3">{news.date}</span>
+          {/* Contenedor condicional: si no ha montado, muestra un estado neutral invisible o estático */}
+          {!isMounted ? (
+            <div className="grid md:grid-cols-2 gap-6 opacity-0">
+              {mockNews.map((news) => (
+                <div key={news.id} className="bg-white border border-[#D8A7A7] rounded-lg p-6">
                   <h4 className="font-bold text-[#1E1E1E] mt-2 mb-4">{news.title}</h4>
-                  
-                  <a
-                    href={news.link}
-                    onClick={() => handleViewNews(news.id)}
-                    className="inline-block px-4 py-2 bg-[#5B0F18] text-white text-xs font-semibold rounded-lg hover:bg-[#7A1F2B] transition-colors"
-                  >
-                    Ver noticia
-                  </a>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {mockNews.map((news) => {
+                const isNew = !viewedNews.includes(news.id)
+
+                return (
+                  <div key={news.id} className="relative bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-md transition-all">
+                    {isNew && (
+                      <span className="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                        ¡NUEVA!
+                      </span>
+                    )}
+                    <span className="text-xs font-bold text-[#7A1F2B]">{news.category}</span>
+                    <span className="text-xs text-gray-400 ml-3">{news.date}</span>
+                    <h4 className="font-bold text-[#1E1E1E] mt-2 mb-4">{news.title}</h4>
+                    
+                    <a
+                      href={news.link}
+                      onClick={() => handleViewNews(news.id)}
+                      className="inline-block px-4 py-2 bg-[#5B0F18] text-white text-xs font-semibold rounded-lg hover:bg-[#7A1F2B] transition-colors"
+                    >
+                      Ver noticia
+                    </a>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4 mb-16">
