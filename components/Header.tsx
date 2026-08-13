@@ -41,6 +41,17 @@ export default function Header({
   // Secciones del dropdown/mobile (todas menos "contacto")
   const navSections = sections.filter((section) => section.id !== 'contacto')
 
+  // FIX #2: en mobile/tablet los "centerSections" (Origen de la Ley, Ecosistema,
+  // Instrumentos, Ejes Programáticos) están ocultos porque su <nav> es "hidden md:flex".
+  // Antes nunca se agregaban al menú hamburguesa, así que eran invisibles por debajo
+  // de md. Los combinamos aquí (sin duplicar ids) para que sí aparezcan.
+  const mobileSections = [
+    ...centerSections,
+    ...navSections.filter(
+      (section) => !centerSections.some((c) => c.id === section.id)
+    ),
+  ]
+
   const handleNavClick = (id: string) => {
     setActiveSection(id)
     setMobileMenuOpen(false)
@@ -84,13 +95,27 @@ export default function Header({
     document.addEventListener('mousedown', handleOutsideClick)
     document.addEventListener('touchstart', handleOutsideClick)
     document.addEventListener('touchmove', handleOutsideTouchMove)
-    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    // FIX #3: al abrir el panel dentro del header (que es "sticky"), el contenido
+    // de la página se empuja hacia abajo. Si no estás en el tope, el navegador
+    // ajusta el scroll para compensar ese empuje (scroll anchoring) y eso disparaba
+    // un evento "scroll" que cerraba el menú de inmediato. Retrasamos la activación
+    // del listener de scroll para que ese ajuste automático no cuente como "el
+    // usuario quiso cerrar el menú".
+    let scrollListenerActive = false
+    const scrollListenerTimeout = window.setTimeout(() => {
+      scrollListenerActive = true
+      window.addEventListener('scroll', handleScroll, { passive: true })
+    }, 350)
 
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick)
       document.removeEventListener('touchstart', handleOutsideClick)
       document.removeEventListener('touchmove', handleOutsideTouchMove)
-      window.removeEventListener('scroll', handleScroll)
+      window.clearTimeout(scrollListenerTimeout)
+      if (scrollListenerActive) {
+        window.removeEventListener('scroll', handleScroll)
+      }
     }
   }, [mobileMenuOpen, setMobileMenuOpen])
 
@@ -118,13 +143,17 @@ export default function Header({
                   }}
                 />
               </div>
-              {/* Brand Text */}
-              <div className="hidden sm:block">
+              {/* Brand Text — FIX #1: antes tenía "hidden sm:block" y nunca se veía
+                  en celulares. Ahora siempre es visible; solo el subtítulo se oculta
+                  en pantallas muy chicas para no saturar el header. */}
+              <div className="block">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-white">Impulsa</span>
-                  <span className="text-lg font-bold text-[#FFB3B3]">Tarija</span>
+                  <span className="text-base sm:text-lg font-bold text-white">Impulsa</span>
+                  <span className="text-base sm:text-lg font-bold text-[#FFB3B3]">Tarija</span>
                 </div>
-                <p className="text-xs text-white/70 font-medium">Concejo Municipal de Tarija</p>
+                <p className="hidden xs:block sm:block text-[10px] sm:text-xs text-white/70 font-medium">
+                  Concejo Municipal de Tarija
+                </p>
               </div>
             </button>
           </div>
@@ -150,7 +179,7 @@ export default function Header({
           {/* Spacer (solo cuando el nav central está oculto, en pantallas < md) */}
           <div className="flex-1 md:hidden"></div>
 
-          {/* Secciones (icono, dropdown con Inicio / ¿Qué es la Ley? / Ecosistema / Videos / Biblioteca) + Contacto */}
+          {/* Secciones (icono, dropdown) + Contacto */}
           <div className="flex items-center gap-2 shrink-0">
             <div ref={sectionMenuRef} className="relative hidden sm:block">
               <button
@@ -167,7 +196,7 @@ export default function Header({
               </button>
               {mobileMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg p-2 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-y-auto">
-                  {navSections.map((section) => (
+                  {mobileSections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleNavClick(section.id)}
@@ -211,12 +240,13 @@ export default function Header({
           </div>
         </div>
 
-        {/* Mobile Sections Menu (usa las secciones del dropdown, igual que antes) */}
+        {/* Mobile Sections Menu — FIX #2: ahora usa mobileSections (incluye
+            Origen de la Ley, Instrumentos, Ejes Programáticos, etc.) */}
         {mobileMenuOpen && (
           <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-white/20 pt-4">
             <p className="px-3 text-xs font-bold text-white/70 uppercase tracking-wider mb-3">Secciones</p>
             <div className="space-y-2">
-              {navSections.map((section) => (
+              {mobileSections.map((section) => (
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}
