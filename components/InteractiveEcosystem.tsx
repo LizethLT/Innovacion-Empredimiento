@@ -187,14 +187,18 @@ export default function InteractiveEcosystem() {
               <div className="absolute left-1/2 top-[13%] h-[100px] w-[84%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#e4b1ae]" />
               <div className="absolute left-1/2 top-[8%] h-7 w-px -translate-x-1/2 bg-[#8c2432]" />
 
-              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 700 680" aria-hidden="true">
-                {/* Flecha hacia "Agenda Estratégica Anual del Ecosistema" */}
-                <path d="M 185 45 Q 160 25 150 4" stroke="#d39495" strokeWidth="2" fill="none" />
-                <path d="M 150 0 L 142 15 L 158 15 Z" fill="#d39495" />
-                {/* Flecha hacia "Plan Municipal para el Desarrollo del Ecosistema" */}
-                <path d="M 515 45 Q 540 25 550 4" stroke="#d39495" strokeWidth="2" fill="none" />
-                <path d="M 550 0 L 542 15 L 558 15 Z" fill="#d39495" />
-              </svg>
+              {/* Flechas hacia los botones superiores. Antes eran un <svg> con viewBox fijo
+                  (0 0 700 680); como en mobile el contenedor real es mucho más angosto que
+                  700px, el navegador comprimía y reacomodaba ese SVG (letterboxing),
+                  haciendo que las flechas aparecieran mucho más abajo de lo esperado, cerca
+                  del título. Usar íconos posicionados por porcentaje evita ese problema y
+                  además permite hacerlos más grandes y centrarlos mejor en desktop. */}
+              <span className="absolute left-[41%] top-[6%] flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-[#fbe4e2] sm:top-[7%] sm:h-10 sm:w-10">
+                <ArrowUpLeft aria-hidden="true" className="h-5 w-5 text-[#8c2432] sm:h-6 sm:w-6" />
+              </span>
+              <span className="absolute right-[41%] top-[6%] flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full bg-[#fbe4e2] sm:top-[7%] sm:h-10 sm:w-10">
+                <ArrowUpRight aria-hidden="true" className="h-5 w-5 text-[#8c2432] sm:h-6 sm:w-6" />
+              </span>
 
               {/* Título central: ahora con más espacio respecto al arco, igual que en Inicio */}
               <div className="absolute left-1/2 top-[30%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">Consejo Municipal de Innovación<br />y Emprendimiento</div>
