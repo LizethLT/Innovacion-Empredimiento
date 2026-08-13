@@ -161,49 +161,55 @@ export default function InteractiveEcosystem() {
 
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:items-start">
           <div className="rounded-[2rem] border border-[#ead9d3] bg-white px-4 py-7 shadow-[0_20px_60px_rgba(98,27,39,0.08)] sm:px-8 sm:py-10">
-            <div className="relative mx-auto h-[600px] max-w-[700px] sm:h-[650px]">
+            {/* FIX: contenedor más alto y con más aire, igual que en Inicio */}
+            <div className="relative mx-auto h-[680px] max-w-[700px] sm:h-[720px]">
+              {/* Botones superiores: mismo estilo de 3 líneas que en Inicio, para que la altura
+                  del bloque sea predecible y no empuje el título hacia el arco. */}
               <button
                 type="button"
                 aria-label="Ver Agenda Estratégica de Innovación"
                 onClick={() => handleSelect('agenda')}
-                className="absolute left-[4%] top-3 z-10 w-[34%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2 text-center text-[10px] font-semibold leading-4 text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
+                className="absolute left-[3%] top-2 z-10 w-[37%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2.5 text-center text-[11px] font-semibold leading-tight text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
               >
-                Agenda Estratégica Anual del Ecosistema
+                Agenda<br />Estratégica Anual<br />del Ecosistema
               </button>
               <button
                 type="button"
                 aria-label="Ver Plan Municipal para el Desarrollo del Ecosistema"
                 onClick={() => handleSelect('plan')}
-                className="absolute right-[4%] top-3 z-10 w-[34%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2 text-center text-[10px] font-semibold leading-4 text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
+                className="absolute right-[3%] top-2 z-10 w-[37%] rounded-xl border border-[#d7a3a1] bg-[#fffaf8] px-3 py-2.5 text-center text-[11px] font-semibold leading-tight text-[#8c2432] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8c2432] hover:bg-[#fff3f1] sm:text-xs"
               >
-                Plan Municipal para el Desarrollo del Ecosistema
+                Plan Municipal<br />para el Desarrollo<br />del Ecosistema
               </button>
-              <div className="absolute left-1/2 top-[12%] h-[155px] w-[88%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#c77d80]"
-              /><div className="absolute left-1/2 top-[14%] h-[155px] w-[88%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#e4b1ae]" />
-              <div className="absolute left-1/2 top-[10%] h-3 w-px -translate-x-1/2 bg-[#8c2432]" />
 
-              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 700 650" aria-hidden="true">
+              {/* Arcos decorativos: más bajos y compactos para no chocar con los botones ni el título */}
+              <div className="absolute left-1/2 top-[11%] h-[100px] w-[84%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#c77d80]" />
+              <div className="absolute left-1/2 top-[13%] h-[100px] w-[84%] -translate-x-1/2 rounded-[50%_50%_0_0] border-t border-[#e4b1ae]" />
+              <div className="absolute left-1/2 top-[8%] h-7 w-px -translate-x-1/2 bg-[#8c2432]" />
+
+              <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 700 680" aria-hidden="true">
                 {/* Flecha hacia "Agenda Estratégica Anual del Ecosistema" */}
-                <path d="M 185 150 Q 145 95 138 64" stroke="#d39495" strokeWidth="2" fill="none" />
-                <path d="M 138 60 L 130 76 L 146 76 Z" fill="#d39495" />
+                <path d="M 185 45 Q 160 25 150 4" stroke="#d39495" strokeWidth="2" fill="none" />
+                <path d="M 150 0 L 142 15 L 158 15 Z" fill="#d39495" />
                 {/* Flecha hacia "Plan Municipal para el Desarrollo del Ecosistema" */}
-                <path d="M 515 150 Q 555 95 562 64" stroke="#d39495" strokeWidth="2" fill="none" />
-                <path d="M 562 60 L 554 76 L 570 76 Z" fill="#d39495" />
+                <path d="M 515 45 Q 540 25 550 4" stroke="#d39495" strokeWidth="2" fill="none" />
+                <path d="M 550 0 L 542 15 L 558 15 Z" fill="#d39495" />
               </svg>
 
-              <div className="absolute left-1/2 top-[16%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">Consejo Municipal de Innovación<br />y Emprendimiento</div>
+              {/* Título central: ahora con más espacio respecto al arco, igual que en Inicio */}
+              <div className="absolute left-1/2 top-[30%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">Consejo Municipal de Innovación<br />y Emprendimiento</div>
 
-              <button type="button" onClick={() => handleSelect('actores')} aria-label="Ver Actores" className={`absolute left-1/2 top-[28%] flex h-52 w-52 -translate-x-1/2 flex-col items-center justify-center rounded-full border-[3px] border-[#8c2432] bg-[#8c2432] text-white shadow-[0_14px_28px_rgba(140,36,50,0.2)] transition hover:scale-[1.02] sm:h-60 sm:w-60 ${selectedId === 'actores' ? 'ring-4 ring-[#edc7c4] ring-offset-4' : ''}`}>
+              <button type="button" onClick={() => handleSelect('actores')} aria-label="Ver Actores" className={`absolute left-1/2 top-[40%] flex h-52 w-52 -translate-x-1/2 flex-col items-center justify-center rounded-full border-[3px] border-[#8c2432] bg-[#8c2432] text-white shadow-[0_14px_28px_rgba(140,36,50,0.2)] transition hover:scale-[1.02] sm:h-60 sm:w-60 ${selectedId === 'actores' ? 'ring-4 ring-[#edc7c4] ring-offset-4' : ''}`}>
                 <span className="text-xs font-bold uppercase tracking-[0.28em]">Actores</span>
                 <div className="mt-5 grid grid-cols-3 gap-2">{actorIcons.map((Icon, index) => <span key={index} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#a94d5b] sm:h-10 sm:w-10"><Icon size={17} aria-hidden="true" /></span>)}</div>
               </button>
 
-              <div className="absolute left-[20%] top-[65%] h-20 w-[29%] -rotate-[25deg] border-t border-[#d39495]" />
-              <div className="absolute left-1/2 top-[65%] h-20 -translate-x-1/2 border-l border-[#d39495]" />
-              <div className="absolute right-[20%] top-[65%] h-20 w-[29%] rotate-[25deg] border-t border-[#d39495]" />
+              <div className="absolute left-[20%] top-[70%] h-20 w-[29%] -rotate-[25deg] border-t border-[#d39495]" />
+              <div className="absolute left-1/2 top-[70%] h-20 -translate-x-1/2 border-l border-[#d39495]" />
+              <div className="absolute right-[20%] top-[70%] h-20 w-[29%] rotate-[25deg] border-t border-[#d39495]" />
 
               {[['secretaria', 'Secretaría', 'Técnica', Building2, 'left-[4%]'], ['observatorio', 'Observatorio', 'Municipal', Eye, 'left-1/2 -translate-x-1/2'], ['mesas', 'Mesas', 'Técnicas', Users, 'right-[4%]']].map(([id, line1, line2, Icon, position]) => (
-                <button key={id as string} type="button" onClick={() => handleSelect(id as string)} className={`absolute ${position} top-[79%] flex h-24 w-24 flex-col items-center justify-center rounded-full border-2 border-[#dfa0a0] bg-[#fffdfb] text-[10px] font-semibold text-[#241f20] shadow-sm transition hover:-translate-y-1 hover:bg-[#fff5f1] sm:h-28 sm:w-28 ${selectedId === id ? 'bg-[#fff0ec] ring-2 ring-[#dfa0a0] ring-offset-2' : ''}`}><Icon size={21} className="mb-2" strokeWidth={1.8} aria-hidden="true" /><span>{line1 as string}</span><span>{line2 as string}</span></button>
+                <button key={id as string} type="button" onClick={() => handleSelect(id as string)} className={`absolute ${position} top-[84%] flex h-24 w-24 flex-col items-center justify-center rounded-full border-2 border-[#dfa0a0] bg-[#fffdfb] text-[10px] font-semibold text-[#241f20] shadow-sm transition hover:-translate-y-1 hover:bg-[#fff5f1] sm:h-28 sm:w-28 ${selectedId === id ? 'bg-[#fff0ec] ring-2 ring-[#dfa0a0] ring-offset-2' : ''}`}><Icon size={21} className="mb-2" strokeWidth={1.8} aria-hidden="true" /><span>{line1 as string}</span><span>{line2 as string}</span></button>
               ))}
             </div>
           </div>
