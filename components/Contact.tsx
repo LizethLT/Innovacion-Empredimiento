@@ -3,7 +3,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { Mail, Clock, MessageSquare, CheckCircle, Bell } from 'lucide-react'
 
-// Definimos las noticias con IDs fijos y únicos
 const mockNews = [
   {
     id: 'noticia-observatorio-2026',
@@ -30,9 +29,12 @@ export default function Contact() {
   const [isSubscribed, setIsSubscribed] = useState(false)
 
   const [viewedNews, setViewedNews] = useState<string[]>([])
-  const [isMounted, setIsMounted] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    // Confirmamos que estamos en el cliente y cargamos el almacenamiento local de golpe
+    setIsClient(true)
+    
     const savedSubscription = localStorage.getItem('news_subscribed')
     if (savedSubscription === 'true') {
       setIsSubscribed(true)
@@ -40,9 +42,6 @@ export default function Contact() {
 
     const savedViewedNews = JSON.parse(localStorage.getItem('viewed_news') || '[]')
     setViewedNews(savedViewedNews)
-    
-    // Activamos el montaje para renderizar las etiquetas sin parpadeo
-    setIsMounted(true)
   }, [])
 
   const handleViewNews = (newsId: string) => {
@@ -142,20 +141,22 @@ export default function Contact() {
               <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
             </div>
             
-            {/* Si aún no monta, ocultamos el bloque para prevenir parpadeos */}
-            {isMounted && mockNews.some(n => !viewedNews.includes(n.id)) && (
+            {/* Si no es cliente, no renderizamos nada temporalmente para evitar parpadeo */}
+            {isClient && mockNews.some(n => !viewedNews.includes(n.id)) && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
                 <Bell size={14} /> Tienes nuevas noticias
               </span>
             )}
           </div>
 
-          {/* Contenedor condicional: si no ha montado, muestra un estado neutral invisible o estático */}
-          {!isMounted ? (
-            <div className="grid md:grid-cols-2 gap-6 opacity-0">
+          {/* Renderizado condicional estricto: bloquea el HTML hasta que el cliente carge los datos reales */}
+          {!isClient ? (
+            <div className="grid md:grid-cols-2 gap-6 min-h-[180px]">
+              {/* Esqueleto de carga estático idéntico en tamaño para evitar saltos de pantalla */}
               {mockNews.map((news) => (
-                <div key={news.id} className="bg-white border border-[#D8A7A7] rounded-lg p-6">
-                  <h4 className="font-bold text-[#1E1E1E] mt-2 mb-4">{news.title}</h4>
+                <div key={news.id} className="bg-white border border-[#D8A7A7] rounded-lg p-6 opacity-60">
+                  <span className="text-xs font-bold text-gray-300">{news.category}</span>
+                  <h4 className="font-bold text-gray-300 mt-2 mb-4">Cargando...</h4>
                 </div>
               ))}
             </div>
