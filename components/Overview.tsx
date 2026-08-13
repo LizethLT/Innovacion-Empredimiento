@@ -265,11 +265,16 @@ const CONCEJAL_MODAL_HIGHLIGHT = {
   text: 'Tarija tiene el talento, la creatividad y el potencial para convertirse en un referente de innovación y emprendimiento. Este Proyecto de Ley nace para transformar ese potencial en oportunidades, articulando al Gobierno Municipal, las universidades, las empresas, los emprendedores y la ciudadanía en un mismo propósito. A través de una visión compartida, una gobernanza colaborativa y herramientas innovadoras, busca impulsar el desarrollo sostenible, generar empleo de calidad y construir una economía basada en el conocimiento. Porque el futuro de Tarija no depende solo de sus recursos, sino de la capacidad de su gente para crear, innovar y emprender juntos.',
 }
 
-
+// Instituciones que apoyan el Proyecto de Ley.
+// Placeholder temporal: reemplaza el campo `logo` de cada institución por la ruta real
+// del logo (ej. '/logos/upds.png') en cuanto te confirmen la lista definitiva y las
+// imágenes. Si `logo` no carga (archivo inexistente), se muestra automáticamente un
+// ícono genérico de respaldo para que el diseño nunca se rompa.
 const SUPPORTERS = [
-  { id: 'apoyo-1', name: 'Institución 1', logo: '/logos/oficina del concejal municipal.' },
-  { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/concejo municipal tarija.jpeg' },
-  { id: 'apoyo-3', name: 'Institución 3', logo: '/logos/Logo Tarija Dialoga.png' },
+  { id: 'apoyo-1', name: 'Institución 1', logo: '/logos/oficina del concejal.png' },
+  { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/Logo Tarija Dialoga.png' },
+  { id: 'apoyo-3', name: 'Institución 3', logo: '/logos/concejo municipal tarija.jpeg' },
+  { id: 'apoyo-4', name: 'Institución 4', logo: '/logos/institucion-4.png' },
   { id: 'apoyo-5', name: 'Institución 5', logo: '/logos/institucion-5.png' },
   { id: 'apoyo-6', name: 'Institución 6', logo: '/logos/institucion-6.png' },
   { id: 'apoyo-7', name: 'Institución 7', logo: '/logos/institucion-7.png' },
@@ -1347,7 +1352,7 @@ export default function Overview({
                 src={supporter.logo}
                 alt={supporter.name}
                 title={supporter.name}
-                className="h-32 w-auto max-w-full object-contain grayscale transition-all duration-300 ease-out group-hover:scale-110 group-hover:grayscale-0 sm:h-36"
+                className="h-32 w-auto max-w-full object-contain transition-all duration-300 ease-out group-hover:scale-110 sm:h-36 sm:grayscale sm:group-hover:grayscale-0"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'
                   e.currentTarget.nextElementSibling?.classList.remove('hidden')
