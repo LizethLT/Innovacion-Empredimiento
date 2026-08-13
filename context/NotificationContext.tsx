@@ -17,21 +17,43 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [viewedNoticias, setViewedNoticias] = useState<Set<string>>(new Set())
-  const [unviewedCount, setUnviewedCount] = useState(0)
-
-  // Cargar noticias visualizadas del localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('viewedNoticias')
-    if (stored) {
-      try {
-        const viewed = JSON.parse(stored) as ViewedNoticia[]
-        setViewedNoticias(new Set(viewed.map(v => v.id)))
-      } catch (e) {
-        console.error('Error loading viewed noticias:', e)
+  // CORRECCIÓN CLAVE: Inicializamos el estado leyendo el localStorage de inmediato 
+  // desde el primer fotograma. Esto evita el estado vacío inicial y elimina el parpadeo.
+  const [viewedNoticias, setViewedNoticias] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('viewedNoticias')
+      if (stored) {
+        try {
+          const viewed = JSON.parse(stored) as ViewedNoticia[]
+          return new Set(viewed.map(v => v.id))
+        } catch (e) {
+          console.error('Error loading viewed noticias:', e)
+        }
       }
     }
-  }, [])
+    return new Set()
+  })
+
+  const [unviewedCount, setUnviewedCount] = useState(0)
+
+  // Sincronización periódica con la API para contar noticias no vistas
+  useEffect(() => {
+    const updateUnviewedCount = () => {
+      fetch('/api/noticias')
+        .then(res => res.json())
+        .then(data => {
+          const noticias = data.noticias ?? []
+          const unviewed = noticias.filter((n: any) => !viewedNoticias.has(n.id))
+          setUnviewedCount(unviewed.length)
+        })
+        .catch(e => console.error('Error fetching noticias:', e))
+    }
+
+    updateUnviewedCount()
+    const interval = setInterval(updateUnviewedCount, 5000)
+
+    return () => clearInterval(interval)
+  }, [viewedNoticias])
 
   const markAsViewed = (noticiasId: string) => {
     setViewedNoticias(prev => {
@@ -60,25 +82,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }
     }
   }
-
-  // Calcular unviewedCount cuando cambien las noticias visualizadas
-  useEffect(() => {
-    const updateUnviewedCount = () => {
-      fetch('/api/noticias')
-        .then(res => res.json())
-        .then(data => {
-          const noticias = data.noticias ?? []
-          const unviewed = noticias.filter((n: any) => !viewedNoticias.has(n.id))
-          setUnviewedCount(unviewed.length)
-        })
-        .catch(e => console.error('Error fetching noticias:', e))
-    }
-
-    updateUnviewedCount()
-    const interval = setInterval(updateUnviewedCount, 5000)
-
-    return () => clearInterval(interval)
-  }, [viewedNoticias])
 
   return (
     <NotificationContext.Provider value={{ unviewedCount, viewedNoticias, markAsViewed, loadViewedNoticias }}>
