@@ -271,10 +271,9 @@ const CONCEJAL_MODAL_HIGHLIGHT = {
 // imágenes. Si `logo` no carga (archivo inexistente), se muestra automáticamente un
 // ícono genérico de respaldo para que el diseño nunca se rompa.
 const SUPPORTERS = [
-  { id: 'apoyo-1', name: 'Institución 1', logo: '/logos/institucion-1.png' },
-  { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/institucion-2.png' },
-  { id: 'apoyo-3', name: 'Institución 3', logo: '/logos/institucion-3.png' },
-  { id: 'apoyo-4', name: 'Institución 4', logo: '/logos/institucion-4.png' },
+  { id: 'apoyo-1', name: 'Institución 1', logo: '/logos/oficina del concejal municipal.jpeg' },
+  { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/concejo municipal tarija.jpeg' },
+  { id: 'apoyo-3', name: 'Institución 3', logo: '/logos/Logo Tarija Dialoga.png' },
   { id: 'apoyo-5', name: 'Institución 5', logo: '/logos/institucion-5.png' },
   { id: 'apoyo-6', name: 'Institución 6', logo: '/logos/institucion-6.png' },
   { id: 'apoyo-7', name: 'Institución 7', logo: '/logos/institucion-7.png' },
