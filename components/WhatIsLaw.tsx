@@ -21,8 +21,8 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 
-const PDF_PATH = '/docs/Ley Innovacion y emprendedurismo FINAL.pdf'
-const PDF_COVER_IMAGE = ''
+const PDF_PATH = '/docs/Ley Innovacion y emprendedurismo FINAL AGOSTO.pdf'
+const PDF_COVER_IMAGE = '/images/portada-ley.png'
 
 const lawInfo = [
   {
@@ -321,16 +321,16 @@ export default function WhatIsLaw() {
             className="group relative mx-auto block w-full max-w-[280px] focus:outline-none"
             aria-label="Ver el proyecto de Ley completo"
           >
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[#D8A7A7] bg-gradient-to-br from-[#5B0F18] to-[#7A1F2B] shadow-lg transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl">
+            <div className="relative w-full overflow-hidden rounded-2xl border border-[#D8A7A7] shadow-lg transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl">
               {PDF_COVER_IMAGE ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={PDF_COVER_IMAGE}
                   alt="Portada del proyecto de Ley"
-                  className="h-full w-full object-cover"
+                  className="block h-auto w-full"
                 />
               ) : (
-                <div className="flex h-full w-full flex-col justify-between p-6 text-white">
+                <div className="flex aspect-[3/4] h-full w-full flex-col justify-between bg-gradient-to-br from-[#5B0F18] to-[#7A1F2B] p-6 text-white">
                   <div className="flex items-center justify-center rounded-xl bg-white/10 p-3">
                     <ScrollText size={32} aria-hidden="true" />
                   </div>

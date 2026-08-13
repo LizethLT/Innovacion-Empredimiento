@@ -265,11 +265,7 @@ const CONCEJAL_MODAL_HIGHLIGHT = {
   text: 'Tarija tiene el talento, la creatividad y el potencial para convertirse en un referente de innovación y emprendimiento. Este Proyecto de Ley nace para transformar ese potencial en oportunidades, articulando al Gobierno Municipal, las universidades, las empresas, los emprendedores y la ciudadanía en un mismo propósito. A través de una visión compartida, una gobernanza colaborativa y herramientas innovadoras, busca impulsar el desarrollo sostenible, generar empleo de calidad y construir una economía basada en el conocimiento. Porque el futuro de Tarija no depende solo de sus recursos, sino de la capacidad de su gente para crear, innovar y emprender juntos.',
 }
 
-// Instituciones que apoyan el Proyecto de Ley.
-// Placeholder temporal: reemplaza el campo `logo` de cada institución por la ruta real
-// del logo (ej. '/logos/upds.png') en cuanto te confirmen la lista definitiva y las
-// imágenes. Si `logo` no carga (archivo inexistente), se muestra automáticamente un
-// ícono genérico de respaldo para que el diseño nunca se rompa.
+
 const SUPPORTERS = [
   { id: 'apoyo-1', name: 'Institución 1', logo: '/logos/oficina del concejal.png' },
   { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/Logo Tarija Dialoga.png' },
