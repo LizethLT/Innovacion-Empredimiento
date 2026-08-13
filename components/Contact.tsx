@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
-import { Mail, Clock, MessageSquare } from 'lucide-react'
+import { useState, useEffect, type FormEvent } from 'react'
+import { Mail, Clock, MessageSquare, CheckCircle } from 'lucide-react'
 
 export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -9,6 +9,15 @@ export default function Contact() {
 
   const [newsEmail, setNewsEmail] = useState('')
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [isSubscribed, setIsSubscribed] = useState(false)
+
+  // Verificar si ya se había suscrito previamente en este navegador
+  useEffect(() => {
+    const savedSubscription = localStorage.getItem('news_subscribed')
+    if (savedSubscription === 'true') {
+      setIsSubscribed(true)
+    }
+  }, [])
 
   const contactMethods = [
     {
@@ -79,6 +88,8 @@ export default function Contact() {
       if (!response.ok) throw new Error('No se pudo suscribir')
 
       setNewsStatus('sent')
+      setIsSubscribed(true)
+      localStorage.setItem('news_subscribed', 'true') // Guarda el estado en el navegador
       setNewsEmail('')
     } catch (error) {
       setNewsStatus('error')
@@ -273,29 +284,34 @@ export default function Contact() {
             <div className="bg-[#F8F1E7] border border-[#D8A7A7] rounded-lg p-6">
               <h4 className="font-bold text-[#1E1E1E] mb-2">Suscríbete a Noticias</h4>
               <p className="text-sm text-gray-600 mb-4">Recibe una notificación cada vez que se publique una noticia o video nuevo</p>
-              <form onSubmit={handleSubscribe} className="space-y-2">
-                <input
-                  type="email"
-                  value={newsEmail}
-                  onChange={(e) => setNewsEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
-                  placeholder="tu@email.com"
-                />
-                <button
-                  type="submit"
-                  disabled={newsStatus === 'sending'}
-                  className="w-full px-4 py-2 bg-[#5B0F18] text-white font-semibold rounded-lg hover:bg-[#1E1E1E] transition-colors text-sm disabled:opacity-60"
-                >
-                  {newsStatus === 'sending' ? 'Suscribiendo...' : 'Suscribir'}
-                </button>
-                {newsStatus === 'sent' && (
-                  <p className="text-sm font-semibold text-green-700">¡Listo! Te avisaremos de las próximas noticias.</p>
-                )}
-                {newsStatus === 'error' && (
-                  <p className="text-sm font-semibold text-red-700">No se pudo suscribir, intenta de nuevo.</p>
-                )}
-              </form>
+              
+              {isSubscribed ? (
+                <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 p-3 rounded-lg text-sm font-semibold">
+                  <CheckCircle size={20} />
+                  <span>¡Ya estás suscrito para recibir novedades!</span>
+                </div>
+              ) : (
+                <form onSubmit={handleSubscribe} className="space-y-2">
+                  <input
+                    type="email"
+                    value={newsEmail}
+                    onChange={(e) => setNewsEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
+                    placeholder="tu@email.com"
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsStatus === 'sending'}
+                    className="w-full px-4 py-2 bg-[#5B0F18] text-white font-semibold rounded-lg hover:bg-[#1E1E1E] transition-colors text-sm disabled:opacity-60"
+                  >
+                    {newsStatus === 'sending' ? 'Suscribiendo...' : 'Suscribir'}
+                  </button>
+                  {newsStatus === 'error' && (
+                    <p className="text-sm font-semibold text-red-700">No se pudo suscribir, intenta de nuevo.</p>
+                  )}
+                </form>
+              )}
             </div>
           </div>
         </div>
