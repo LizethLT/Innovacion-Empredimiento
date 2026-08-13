@@ -941,22 +941,44 @@ III. El Órgano Ejecutivo Municipal analizará las recomendaciones contenidas en
 
 IV. La Agenda Estratégica también podrá realizar recomendaciones a otros miembros tanto institucionales como privados para la ejecución de acciones tendientes a fortalecer el Ecosistema.`,
   },
-  {
-    id: 'art-24',
-    range: '24 al 24',
-    title: 'Consejo Municipal del Ecosistema de Innovación, Creatividad, Emprendimiento y Economía del Conocimiento',
-    content: `CAPÍTULO IV
+ {
+  id: 'art-24',
+  range: '24 al 24',
+  title: 'Consejo Municipal del Ecosistema de Innovación, Creatividad, Emprendimiento y Economía del Conocimiento',
+  content: `CAPÍTULO IV
 
 CONSEJO MUNICIPAL DEL ECOSISTEMA DE INNOVACIÓN, CREATIVIDAD, EMPRENDIMIENTO Y ECONOMÍA DEL CONOCIMIENTO
 
-Artículo 24. (Consejo Municipal del Ecosistema de Innovación, Creatividad, Emprendimiento y Economía del Conocimiento)
+Artículo 24. (Secretaría Técnica Permanente)
 
-I. Se crea el Consejo Municipal del Ecosistema de Innovación, Creatividad, Emprendimiento y Economía del Conocimiento como la instancia permanente de participación, articulación, concertación y coordinación estratégica del Ecosistema Municipal.
+I. La Secretaría Técnica Permanente será ejercida por la unidad organizacional designada por el Órgano Ejecutivo Municipal como responsable de la implementación de la presente Ley, de conformidad con la estructura organizacional vigente del Gobierno Autónomo Municipal de Tarija.
 
-II. El Consejo constituye el principal espacio de diálogo, construcción de consensos y coordinación entre el Gobierno Autónomo Municipal de Tarija y los actores que integran el Ecosistema Municipal para la formulación de propuestas, recomendaciones y acciones orientadas al fortalecimiento de la innovación, la creatividad, el emprendimiento y la economía del conocimiento.
+II. La Secretaría Técnica Permanente constituye el órgano de apoyo técnico, administrativo y de coordinación del Consejo Municipal y de las Mesas Temáticas de Articulación.
 
-III. El Consejo desarrollará sus funciones respetando las competencias, autonomía y naturaleza jurídica de las instituciones que lo integran, promoviendo la cooperación voluntaria, la corresponsabilidad y el interés público.`,
-  },
+III. Son funciones de la Secretaría Técnica Permanente:
+
+a) Coordinar las actividades del Consejo Municipal y de las Mesas Temáticas.
+
+b) Convocar a las sesiones del Consejo por instrucción de la Presidencia.
+
+c) Preparar la documentación técnica necesaria para el desarrollo de las sesiones.
+
+d) Elaborar, custodiar y sistematizar las actas, acuerdos, recomendaciones, informes y demás documentos técnicos del Consejo Municipal.
+
+e) Brindar apoyo técnico y administrativo al Consejo Municipal y a las Mesas Temáticas.
+
+f) Coordinar la elaboración de la Agenda Estratégica Anual del Ecosistema.
+
+g) Realizar el seguimiento a las recomendaciones, acuerdos e iniciativas promovidas por el Consejo Municipal.
+
+h) Coordinar con las unidades organizacionales del Gobierno Autónomo Municipal y con los actores del Ecosistema la implementación de las acciones derivadas de la presente Ley.
+
+i) Promover la articulación permanente entre los actores del Ecosistema Municipal, facilitando la generación de alianzas estratégicas, convenios, redes de colaboración, procesos de innovación abierta y otras iniciativas orientadas al cumplimiento de los objetivos de la presente Ley.
+
+j) Administrar y coordinar el flujo de información institucional necesaria para el funcionamiento del Sistema Municipal y apoyar administrativamente las actividades del Observatorio Municipal.
+
+k) Las demás funciones que le asignen la presente Ley, su reglamentación y el reglamento interno del Consejo Municipal.`
+},
   {
     id: 'art-25-29',
     range: '25 al 29',

@@ -38,13 +38,13 @@ export default function Header({
 
   const mobileButtonLabel = mobileMenuOpen ? 'Cerrar menú de secciones' : 'Abrir menú de secciones'
 
-  // Secciones del dropdown/mobile (todas menos "contacto")
+  // Secciones del dropdown de ícono (todas menos "contacto")
   const navSections = sections.filter((section) => section.id !== 'contacto')
 
   // FIX #2: en mobile/tablet los "centerSections" (Origen de la Ley, Ecosistema,
   // Instrumentos, Ejes Programáticos) están ocultos porque su <nav> es "hidden md:flex".
   // Antes nunca se agregaban al menú hamburguesa, así que eran invisibles por debajo
-  // de md. Los combinamos aquí (sin duplicar ids) para que sí aparezcan.
+  // de md. Los combinamos aquí (sin duplicar ids) para que sí aparezcan en ESE panel.
   const mobileSections = [
     ...centerSections,
     ...navSections.filter(
@@ -196,7 +196,7 @@ export default function Header({
               </button>
               {mobileMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg p-2 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-y-auto">
-                  {mobileSections.map((section) => (
+                  {navSections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleNavClick(section.id)}
@@ -240,7 +240,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Mobile Sections Menu — FIX #2: ahora usa mobileSections (incluye
+        {/* Mobile Sections Menu — usa mobileSections (incluye
             Origen de la Ley, Instrumentos, Ejes Programáticos, etc.) */}
         {mobileMenuOpen && (
           <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-white/20 pt-4">
