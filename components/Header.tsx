@@ -25,20 +25,32 @@ const DEFAULT_CENTER_SECTIONS = [
 ]
 
 // Orden fijo deseado para el panel de secciones en mobile.
-// ⚠️ Verifica que estos ids coincidan con los que usas en `sections` / `centerSections`
-// (por ejemplo en page.tsx). Si el id de "¿Qué es la Ley?" es distinto a
-// 'que-es-la-ley', ajústalo aquí.
-const MOBILE_SECTIONS_ORDER = [
+// Se compara por LABEL normalizado (sin tildes, minúsculas, sin espacios extra)
+// en vez de por `id`, porque los ids reales usados en page.tsx no siempre
+// coinciden exactamente con los que se puedan suponer aquí. Comparar por label
+// es más robusto: el texto visible es el que conocemos con certeza.
+const MOBILE_LABEL_ORDER = [
   'inicio',
-  'origen',
-  'que-es-la-ley',
-  'ecosistema',
+  'origen de la ley',
+  'que es la ley',
+  'el ecosistema',
   'instrumentos',
-  'ejes',
+  'ejes programaticos',
   'noticias',
   'videos',
   'biblioteca',
 ]
+
+// Normaliza: minúsculas, sin tildes/diacríticos, sin signos ¿ ?, espacios colapsados.
+function normalizeLabel(label: string): string {
+  return label
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .replace(/[¿?]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
 
 export default function Header({
   mobileMenuOpen,
@@ -58,8 +70,9 @@ export default function Header({
   const navSections = sections.filter((section) => section.id !== 'contacto')
 
   // Panel de mobile: combina centerSections + navSections (sin duplicar ids) y
-  // luego las reordena según MOBILE_SECTIONS_ORDER. Cualquier sección que no
-  // esté en esa lista de orden queda al final, en el orden en que llegó.
+  // luego las reordena según MOBILE_LABEL_ORDER (comparando por label normalizado).
+  // Cualquier sección que no esté en esa lista de orden queda al final, en el
+  // orden en que llegó.
   const allSectionsMap = new Map<string, { id: string; label: string }>()
   ;[...centerSections, ...navSections].forEach((section) => {
     if (!allSectionsMap.has(section.id)) {
@@ -67,13 +80,16 @@ export default function Header({
     }
   })
 
-  const orderedKnown = MOBILE_SECTIONS_ORDER
-    .map((id) => allSectionsMap.get(id))
+  const allSectionsList = Array.from(allSectionsMap.values())
+
+  const orderedKnown = MOBILE_LABEL_ORDER
+    .map((wantedLabel) =>
+      allSectionsList.find((section) => normalizeLabel(section.label) === wantedLabel)
+    )
     .filter((section): section is { id: string; label: string } => Boolean(section))
 
-  const remaining = Array.from(allSectionsMap.values()).filter(
-    (section) => !MOBILE_SECTIONS_ORDER.includes(section.id)
-  )
+  const knownIds = new Set(orderedKnown.map((section) => section.id))
+  const remaining = allSectionsList.filter((section) => !knownIds.has(section.id))
 
   const mobileSections = [...orderedKnown, ...remaining]
 
@@ -265,7 +281,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Mobile Sections Menu — orden fijo definido en MOBILE_SECTIONS_ORDER */}
+        {/* Mobile Sections Menu — orden fijo definido en MOBILE_LABEL_ORDER */}
         {mobileMenuOpen && (
           <div ref={mobilePanelRef} className="md:hidden pb-4 border-t border-white/20 pt-4">
             <p className="px-3 text-xs font-bold text-white/70 uppercase tracking-wider mb-3">Secciones</p>
