@@ -41,6 +41,17 @@ const MOBILE_LABEL_ORDER = [
   'biblioteca',
 ]
 
+// Dropdown de escritorio (ícono ☰ junto a "Contacto"): solo estas secciones,
+// en este orden. Las demás (Origen, Instrumentos, Ejes, Noticias) ya están
+// visibles en la barra central de desktop, así que no hace falta repetirlas acá.
+const DESKTOP_DROPDOWN_LABEL_ORDER = [
+  'inicio',
+  'que es la ley',
+  'el ecosistema',
+  'videos',
+  'biblioteca',
+]
+
 // Normaliza: minúsculas, sin tildes/diacríticos, sin signos ¿ ?, espacios colapsados.
 function normalizeLabel(label: string): string {
   return label
@@ -92,6 +103,14 @@ export default function Header({
   const remaining = allSectionsList.filter((section) => !knownIds.has(section.id))
 
   const mobileSections = [...orderedKnown, ...remaining]
+
+  // Dropdown de escritorio: solo las secciones de DESKTOP_DROPDOWN_LABEL_ORDER,
+  // en ese orden (no incluye "remaining" — es una lista cerrada, no todas las secciones).
+  const desktopDropdownSections = DESKTOP_DROPDOWN_LABEL_ORDER
+    .map((wantedLabel) =>
+      allSectionsList.find((section) => normalizeLabel(section.label) === wantedLabel)
+    )
+    .filter((section): section is { id: string; label: string } => Boolean(section))
 
   const handleNavClick = (id: string) => {
     setActiveSection(id)
@@ -237,7 +256,7 @@ export default function Header({
               </button>
               {mobileMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg p-2 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-y-auto">
-                  {navSections.map((section) => (
+                  {desktopDropdownSections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleNavClick(section.id)}
