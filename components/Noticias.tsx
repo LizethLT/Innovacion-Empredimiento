@@ -70,7 +70,7 @@ export default function Noticias() {
             </h1>
           </div>
           <p className="max-w-md text-sm leading-relaxed text-[#766c6b]">
-            Informes, convocatorias y avances del trabajo conjunto entre instituciones, emprendedores y comunidad.
+            Informes de gestión, normativas y avances del trabajo legislativo junto a sectores productivos y la ciudadanía.
           </p>
         </div>
 
