@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { Mail, Phone, Clock } from 'lucide-react'
+import { Mail, Clock, MessageSquare } from 'lucide-react'
 
 export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -12,22 +12,26 @@ export default function Contact() {
 
   const contactMethods = [
     {
-      icon: Phone,
-      title: 'Teléfono',
+      icon: MessageSquare,
+      title: 'WhatsApp',
       value: '+591 72994687',
       subtitle: 'Secretaría de Innovación',
+      isWhatsApp: true,
+      link: 'https://wa.me/59172994687',
     },
     {
       icon: Mail,
       title: 'Email',
       value: 'comision.economica.concejo@gmail.com',
       subtitle: 'Consultas generales',
+      isWhatsApp: false,
     },
     {
       icon: Clock,
       title: 'Horario',
       value: 'Lunes a Viernes',
       subtitle: '8:00 - 12:00 / 14:00 - 18:30',
+      isWhatsApp: false,
     },
   ]
 
@@ -95,17 +99,38 @@ export default function Contact() {
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           {contactMethods.map((method, index) => {
             const Icon = method.icon
-            return (
-              <div
-                key={index}
-                className="bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-lg hover:border-[#7A1F2B] transition-all duration-300 text-center"
-              >
+            
+            const cardContent = (
+              <>
                 <div className="w-12 h-12 bg-gradient-to-br from-[#5B0F18] to-[#7A1F2B] rounded-lg flex items-center justify-center mx-auto mb-4">
                   <Icon className="text-white" size={24} />
                 </div>
                 <h3 className="font-bold text-[#1E1E1E] mb-1">{method.title}</h3>
                 <p className="text-sm font-semibold text-[#7A1F2B] mb-2">{method.value}</p>
                 <p className="text-xs text-gray-600">{method.subtitle}</p>
+              </>
+            )
+
+            if (method.isWhatsApp) {
+              return (
+                <a
+                  key={index}
+                  href={method.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-lg hover:border-[#7A1F2B] transition-all duration-300 text-center block group cursor-pointer"
+                >
+                  {cardContent}
+                </a>
+              )
+            }
+
+            return (
+              <div
+                key={index}
+                className="bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-lg hover:border-[#7A1F2B] transition-all duration-300 text-center"
+              >
+                {cardContent}
               </div>
             )
           })}
@@ -144,7 +169,6 @@ export default function Contact() {
                       placeholder="70000000"
                     />
                   </div>
-                  {/* Campo real que se envía en el formulario, ya con el prefijo incluido */}
                   <input type="hidden" name="telefono" value={phone ? `+591 ${phone}` : ''} />
                 </div>
               </div>
