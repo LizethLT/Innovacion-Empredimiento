@@ -1,6 +1,15 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+
+export interface Noticia {
+  id: string
+  title?: string
+  link?: string
+  date?: string
+  category?: string
+  [key: string]: any
+}
 
 interface ViewedNoticia {
   id: string
@@ -8,83 +17,101 @@ interface ViewedNoticia {
 }
 
 interface NotificationContextType {
+  noticias: Noticia[]
   unviewedCount: number
   viewedNoticias: Set<string>
-  markAsViewed: (noticiasId: string) => void
-  loadViewedNoticias: () => void
+  markAsViewed: (noticiaId: string) => void
+  markAllAsViewed: (ids: string[]) => void
 }
+
+const STORAGE_KEY = 'viewedNoticias'
+// 5s era demasiado agresivo (generaba parpadeos). Con 1 min alcanza de sobra
+// para detectar noticias nuevas sin recargar la página.
+const POLL_INTERVAL_MS = 60000
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
-export function NotificationProvider({ children }: { children: ReactNode }) {
-  // CORRECCIÓN CLAVE: Inicializamos el estado leyendo el localStorage de inmediato 
-  // desde el primer fotograma. Esto evita el estado vacío inicial y elimina el parpadeo.
-  const [viewedNoticias, setViewedNoticias] = useState<Set<string>>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('viewedNoticias')
-      if (stored) {
-        try {
-          const viewed = JSON.parse(stored) as ViewedNoticia[]
-          return new Set(viewed.map(v => v.id))
-        } catch (e) {
-          console.error('Error loading viewed noticias:', e)
-        }
-      }
-    }
+function loadViewedIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set()
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) return new Set()
+    const parsed = JSON.parse(stored) as ViewedNoticia[]
+    return new Set(parsed.map((v) => v.id))
+  } catch (e) {
+    console.error('Error loading viewed noticias:', e)
     return new Set()
-  })
+  }
+}
 
-  const [unviewedCount, setUnviewedCount] = useState(0)
+function saveViewedIds(ids: Set<string>) {
+  const payload: ViewedNoticia[] = Array.from(ids).map((id) => ({
+    id,
+    viewedAt: new Date().toISOString(),
+  }))
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+}
 
-  // Sincronización periódica con la API para contar noticias no vistas
+export function NotificationProvider({ children }: { children: ReactNode }) {
+  const [noticias, setNoticias] = useState<Noticia[]>([])
+  const [viewedNoticias, setViewedNoticias] = useState<Set<string>>(new Set())
+
+  // Cargamos lo ya visto UNA sola vez al montar.
   useEffect(() => {
-    const updateUnviewedCount = () => {
+    setViewedNoticias(loadViewedIds())
+  }, [])
+
+  // El polling SOLO actualiza la lista de noticias. Nunca toca
+  // viewedNoticias, así que no hay ningún ciclo que se retroalimente
+  // (antes: cambiar viewedNoticias -> refetch -> podía volver a cambiar
+  // el conteo -> nuevo render -> parpadeo).
+  useEffect(() => {
+    const fetchNoticias = () => {
       fetch('/api/noticias')
-        .then(res => res.json())
-        .then(data => {
-          const noticias = data.noticias ?? []
-          const unviewed = noticias.filter((n: any) => !viewedNoticias.has(n.id))
-          setUnviewedCount(unviewed.length)
-        })
-        .catch(e => console.error('Error fetching noticias:', e))
+        .then((res) => res.json())
+        .then((data) => setNoticias(data.noticias ?? []))
+        .catch((e) => console.error('Error fetching noticias:', e))
     }
 
-    updateUnviewedCount()
-    const interval = setInterval(updateUnviewedCount, 5000)
-
+    fetchNoticias()
+    const interval = setInterval(fetchNoticias, POLL_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [viewedNoticias])
+  }, [])
 
-  const markAsViewed = (noticiasId: string) => {
-    setViewedNoticias(prev => {
+  const markAsViewed = useCallback((noticiaId: string) => {
+    setViewedNoticias((prev) => {
+      if (prev.has(noticiaId)) return prev // nada cambió, evita un render/guardado de más
       const updated = new Set(prev)
-      updated.add(noticiasId)
-      
-      // Guardar en localStorage
-      const viewedArray: ViewedNoticia[] = Array.from(updated).map(id => ({
-        id,
-        viewedAt: new Date().toISOString(),
-      }))
-      localStorage.setItem('viewedNoticias', JSON.stringify(viewedArray))
-      
+      updated.add(noticiaId)
+      saveViewedIds(updated)
       return updated
     })
-  }
+  }, [])
 
-  const loadViewedNoticias = () => {
-    const stored = localStorage.getItem('viewedNoticias')
-    if (stored) {
-      try {
-        const viewed = JSON.parse(stored) as ViewedNoticia[]
-        setViewedNoticias(new Set(viewed.map(v => v.id)))
-      } catch (e) {
-        console.error('Error loading viewed noticias:', e)
-      }
-    }
-  }
+  const markAllAsViewed = useCallback((ids: string[]) => {
+    setViewedNoticias((prev) => {
+      let changed = false
+      const updated = new Set(prev)
+      ids.forEach((id) => {
+        if (!updated.has(id)) {
+          updated.add(id)
+          changed = true
+        }
+      })
+      if (!changed) return prev
+      saveViewedIds(updated)
+      return updated
+    })
+  }, [])
+
+  // Derivado directamente del render: nunca queda "desfasado" ni requiere
+  // un efecto aparte que dispare renders extra.
+  const unviewedCount = noticias.filter((n) => !viewedNoticias.has(n.id)).length
 
   return (
-    <NotificationContext.Provider value={{ unviewedCount, viewedNoticias, markAsViewed, loadViewedNoticias }}>
+    <NotificationContext.Provider
+      value={{ noticias, unviewedCount, viewedNoticias, markAsViewed, markAllAsViewed }}
+    >
       {children}
     </NotificationContext.Provider>
   )

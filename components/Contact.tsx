@@ -2,23 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from 'react'
 import { Mail, Clock, MessageSquare, CheckCircle, Bell } from 'lucide-react'
-
-const mockNews = [
-  {
-    id: 'noticia-observatorio-2026',
-    title: 'Proyecto plantea la creación del Observatorio Municipal de Innovación',
-    link: '#noticia-1',
-    date: '13 de agosto de 2026',
-    category: 'ACTUALIDAD'
-  },
-  {
-    id: 'noticia-ley-innovacion-2026',
-    title: 'Tarija apuesta por el futuro: presentan anteproyecto de ley para impulsar la innovación',
-    link: '#noticia-2',
-    date: '12 de agosto de 2026',
-    category: 'ACTUALIDAD'
-  }
-]
+import { useNotifications } from '@/context/NotificationContext' // ⚠️ ajustá esta ruta a donde tengas el archivo
 
 export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -28,41 +12,41 @@ export default function Contact() {
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [isSubscribed, setIsSubscribed] = useState(false)
 
-  // IDs que llegaron sin marcar como vistas AL MOMENTO DE ENTRAR a esta
-  // sesión/carga de página. Es lo que controla qué se muestra como "nueva"
-  // durante esta visita — no se vuelve a leer de localStorage después,
-  // así que no hay ningún ciclo que prenda y apague el aviso solo.
-  const [newUnreadIds, setNewUnreadIds] = useState<string[]>([])
-  const [showBadge, setShowBadge] = useState(false)
+  const { noticias, viewedNoticias, markAllAsViewed } = useNotifications()
+
   const [isClient, setIsClient] = useState(false)
+  // IDs que estaban sin ver AL MOMENTO de entrar a esta visita. Se calcula
+  // una sola vez (ver flag markedThisVisit) y no se vuelve a recalcular,
+  // así el aviso no aparece/desaparece con cada poll del contexto.
+  const [newUnreadIds, setNewUnreadIds] = useState<string[]>([])
+  const [markedThisVisit, setMarkedThisVisit] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
-
     const savedSubscription = localStorage.getItem('news_subscribed')
     if (savedSubscription === 'true') {
       setIsSubscribed(true)
     }
-
-    const savedViewedNews: string[] = JSON.parse(localStorage.getItem('viewed_news') || '[]')
-
-    const unreadIds = mockNews
-      .map((n) => n.id)
-      .filter((id) => !savedViewedNews.includes(id))
-
-    // Guardamos qué era nuevo para ESTA visita (así el aviso y el tag
-    // "¡NUEVA!" se ven en esta carga aunque ya quedemos marcando abajo).
-    setNewUnreadIds(unreadIds)
-    setShowBadge(unreadIds.length > 0)
-
-    // Se marca como vista de una, sin delays ni timers: la próxima vez
-    // que entre, esa noticia ya no va a figurar como no vista.
-    if (unreadIds.length > 0) {
-      const allIds = mockNews.map((n) => n.id)
-      const updated = Array.from(new Set([...savedViewedNews, ...allIds]))
-      localStorage.setItem('viewed_news', JSON.stringify(updated))
-    }
   }, [])
+
+  // Esperamos a tener la lista real de noticias (del contexto) y a saber
+  // qué se había visto antes; recién ahí calculamos "qué es nuevo para
+  // esta visita" y lo marcamos como visto. Con markedThisVisit evitamos
+  // que se repita cuando el contexto vuelva a hacer polling.
+  useEffect(() => {
+    if (!isClient || markedThisVisit || noticias.length === 0) return
+
+    const unreadIds = noticias
+      .map((n) => n.id)
+      .filter((id) => !viewedNoticias.has(id))
+
+    setNewUnreadIds(unreadIds)
+    setMarkedThisVisit(true)
+
+    if (unreadIds.length > 0) {
+      markAllAsViewed(unreadIds)
+    }
+  }, [isClient, noticias, viewedNoticias, markedThisVisit, markAllAsViewed])
 
   const contactMethods = [
     {
@@ -154,27 +138,28 @@ export default function Contact() {
             </div>
 
             {/* Si no es cliente, no renderizamos nada temporalmente para evitar parpadeo */}
-            {isClient && showBadge && (
+            {isClient && newUnreadIds.length > 0 && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
-                <Bell size={14} /> Tienes nuevas noticias
+                <Bell size={14} /> Tienes {newUnreadIds.length} noticia{newUnreadIds.length > 1 ? 's' : ''} nueva{newUnreadIds.length > 1 ? 's' : ''}
               </span>
             )}
           </div>
 
           {/* Renderizado condicional estricto: bloquea el HTML hasta que el cliente carge los datos reales */}
-          {!isClient ? (
+          {!isClient || noticias.length === 0 ? (
             <div className="grid md:grid-cols-2 gap-6 min-h-[180px]">
-              {/* Esqueleto de carga estático idéntico en tamaño para evitar saltos de pantalla */}
-              {mockNews.map((news) => (
-                <div key={news.id} className="bg-white border border-[#D8A7A7] rounded-lg p-6 opacity-60">
-                  <span className="text-xs font-bold text-gray-300">{news.category}</span>
+              {/* Esqueleto de carga: 2 placeholders mientras isClient=false o mientras
+                  el contexto todavía no trajo noticias reales de /api/noticias */}
+              {[0, 1].map((i) => (
+                <div key={i} className="bg-white border border-[#D8A7A7] rounded-lg p-6 opacity-60">
+                  <span className="text-xs font-bold text-gray-300">ACTUALIDAD</span>
                   <h4 className="font-bold text-gray-300 mt-2 mb-4">Cargando...</h4>
                 </div>
               ))}
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
-              {mockNews.map((news) => {
+              {noticias.map((news) => {
                 const isNew = newUnreadIds.includes(news.id)
 
                 return (
