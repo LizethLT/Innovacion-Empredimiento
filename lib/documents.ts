@@ -24,9 +24,9 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     date: '2024',
     pages: '28 páginas',
     category: 'Leyes', // <-- Aquí asignas la categoría
-    file: '/docs/ley-municipal-completa.pdf',
+    file: '/docs/Ley Innovacion y emprendedurismo.pdf',
   },
-  {
+  /*{
     id: 'reglamento',
     title: 'Reglamento de Implementación',
     description: 'Normas técnicas para la ejecución de la Ley',
@@ -56,7 +56,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     category: 'Metodología', // <-- Aquí asignas la categoría
     file: '/docs/manual-de-procedimientos.pdf',
   },
-  {
+  /*{
     id: 'informe-implementacion',
     title: 'Informe de Implementación',
     description: 'Resultados y avances del primer año',
@@ -95,5 +95,5 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     pages: '25 páginas',
     category: 'Metodología', // <-- Aquí asignas la categoría
     file: '/docs/bases-de-convocatorias.pdf',
-  },
+  },*/
 ]

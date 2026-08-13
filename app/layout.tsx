@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { NotificationProvider } from '@/context/NotificationContext'
 
 export const metadata: Metadata = {
   title: 'Ley Municipal de Innovación - Tarija',
@@ -42,7 +43,9 @@ export default function RootLayout({
   return (
     <html lang="es" className="scroll-smooth">
       <body className="antialiased bg-white">
-        {children}
+        <NotificationProvider>
+          {children}
+        </NotificationProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
