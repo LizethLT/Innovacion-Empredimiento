@@ -3,17 +3,17 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { Mail, Clock, MessageSquare, CheckCircle, Bell } from 'lucide-react'
 
-// Ejemplo de noticias con sus respectivos enlaces o IDs únicos
+// Definimos las noticias. Usamos un 'id' único y fijo para cada una.
 const mockNews = [
   {
-    id: '1',
+    id: 'noticia-observatorio-2026',
     title: 'Proyecto plantea la creación del Observatorio Municipal de Innovación',
     link: '#noticia-1',
     date: '13 de agosto de 2026',
     category: 'ACTUALIDAD'
   },
   {
-    id: '2',
+    id: 'noticia-ley-innovacion-2026',
     title: 'Tarija apuesta por el futuro: presentan anteproyecto de ley para impulsar la innovación',
     link: '#noticia-2',
     date: '12 de agosto de 2026',
@@ -33,6 +33,9 @@ export default function Contact() {
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    // 1. Marcar como montado inmediatamente para evitar parpadeos de renderizado
+    setIsMounted(true)
+
     const savedSubscription = localStorage.getItem('news_subscribed')
     if (savedSubscription === 'true') {
       setIsSubscribed(true)
@@ -40,9 +43,6 @@ export default function Contact() {
 
     const savedViewedNews = JSON.parse(localStorage.getItem('viewed_news') || '[]')
     setViewedNews(savedViewedNews)
-    
-    // Marcamos como montado una vez leído el localStorage
-    setIsMounted(true)
   }, [])
 
   const handleViewNews = (newsId: string) => {
@@ -134,7 +134,7 @@ export default function Contact() {
     <section id="contacto" className="py-20 px-4 bg-gradient-to-br from-[#F8F1E7] to-white">
       <div className="max-w-6xl mx-auto">
         
-        {/* Sección de Noticias con Notificación Dinámica */}
+        {/* Sección de Noticias */}
         <div className="mb-16">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -142,7 +142,7 @@ export default function Contact() {
               <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
             </div>
             
-            {/* Solo se muestra si ya se montó y hay noticias reales sin leer */}
+            {/* Aviso general de la campanita: solo aparece si hay noticias no vistas Y ya cargó el cliente */}
             {isMounted && mockNews.some(n => !viewedNews.includes(n.id)) && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
                 <Bell size={14} /> Tienes nuevas noticias
@@ -152,7 +152,7 @@ export default function Contact() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {mockNews.map((news) => {
-              // Si no ha montado, ocultamos la etiqueta para evitar el parpadeo de renderizado
+              // Condición limpia: Es nueva si el componente ya montó Y su ID NO está en la lista de vistas
               const isNew = isMounted && !viewedNews.includes(news.id)
 
               return (
