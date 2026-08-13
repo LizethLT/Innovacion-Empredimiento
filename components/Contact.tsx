@@ -3,7 +3,7 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { Mail, Clock, MessageSquare, CheckCircle, Bell } from 'lucide-react'
 
-// Definimos las noticias. Usamos un 'id' único y fijo para cada una.
+// Definimos las noticias con IDs fijos y únicos
 const mockNews = [
   {
     id: 'noticia-observatorio-2026',
@@ -27,22 +27,26 @@ export default function Contact() {
 
   const [newsEmail, setNewsEmail] = useState('')
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
-  const [isSubscribed, setIsSubscribed] = useState(false)
+  
+  // Inicializamos directamente leyendo el localStorage para evitar el parpadeo de renderizado
+  const [isSubscribed, setIsSubscribed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('news_subscribed') === 'true'
+    }
+    return false
+  })
 
-  const [viewedNews, setViewedNews] = useState<string[]>([])
+  const [viewedNews, setViewedNews] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      return JSON.parse(localStorage.getItem('viewed_news') || '[]')
+    }
+    return []
+  })
+
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    // 1. Marcar como montado inmediatamente para evitar parpadeos de renderizado
     setIsMounted(true)
-
-    const savedSubscription = localStorage.getItem('news_subscribed')
-    if (savedSubscription === 'true') {
-      setIsSubscribed(true)
-    }
-
-    const savedViewedNews = JSON.parse(localStorage.getItem('viewed_news') || '[]')
-    setViewedNews(savedViewedNews)
   }, [])
 
   const handleViewNews = (newsId: string) => {
@@ -142,7 +146,7 @@ export default function Contact() {
               <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
             </div>
             
-            {/* Aviso general de la campanita: solo aparece si hay noticias no vistas Y ya cargó el cliente */}
+            {/* Aviso general de la campanita */}
             {isMounted && mockNews.some(n => !viewedNews.includes(n.id)) && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
                 <Bell size={14} /> Tienes nuevas noticias
@@ -152,8 +156,8 @@ export default function Contact() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {mockNews.map((news) => {
-              // Condición limpia: Es nueva si el componente ya montó Y su ID NO está en la lista de vistas
-              const isNew = isMounted && !viewedNews.includes(news.id)
+              // Ahora se evalúa instantáneamente con el valor guardado, sin parpadeos
+              const isNew = !viewedNews.includes(news.id)
 
               return (
                 <div key={news.id} className="relative bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-md transition-all">
