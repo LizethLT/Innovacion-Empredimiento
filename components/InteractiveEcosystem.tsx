@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowUp, Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users, X, Book, FileText, Gavel } from 'lucide-react'
+import { Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users, X, Book, FileText, Gavel } from 'lucide-react'
 import { articles, getArticleByRange } from '@/lib/articles'
 
 const ITEMS = [
@@ -193,20 +193,17 @@ export default function InteractiveEcosystem() {
                   haciendo que las flechas aparecieran mucho más abajo de lo esperado, cerca
                   del título. Usar íconos posicionados por porcentaje evita ese problema y
                   además permite hacerlos más grandes y centrarlos mejor en desktop. */}
-              {/* Línea + flecha que sale desde el título y apunta hacia cada botón de arriba */}
-              <div className="absolute left-[39%] top-[9%] h-[20%] w-px origin-top -rotate-[18deg] bg-[#c77d80]" />
-              <ArrowUp
-                aria-hidden="true"
-                style={{ transform: 'rotate(-18deg)' }}
-                className="absolute left-[39%] top-[7%] h-5 w-5 -translate-x-1/2 text-[#8c2432] sm:h-6 sm:w-6"
-              />
-
-              <div className="absolute right-[39%] top-[9%] h-[20%] w-px origin-top rotate-[18deg] bg-[#c77d80]" />
-              <ArrowUp
-                aria-hidden="true"
-                style={{ transform: 'rotate(18deg)' }}
-                className="absolute right-[39%] top-[7%] h-5 w-5 translate-x-1/2 text-[#8c2432] sm:h-6 sm:w-6"
-              />
+              {/* Flecha simple que indica que los botones vienen del título de arriba.
+                  Sin línea larga (se cruzaban en X) y ubicada en el espacio libre entre
+                  el arco y el título, para que no quede tapada por los botones. */}
+              <svg aria-hidden="true" viewBox="0 0 90 48" fill="none" className="absolute left-[27%] top-[19%] h-12 w-20 text-[#a64b57] sm:left-[29%] sm:top-[19%] sm:h-14 sm:w-24">
+                <path d="M78 44C64 25 45 10 12 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                <path d="M12 8l10 1M12 8l4 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+              </svg>
+              <svg aria-hidden="true" viewBox="0 0 90 48" fill="none" className="absolute right-[27%] top-[19%] h-12 w-20 text-[#a64b57] sm:right-[29%] sm:top-[19%] sm:h-14 sm:w-24">
+                <path d="M12 44C26 25 45 10 78 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                <path d="M78 8l-10 1M78 8l-4 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+              </svg>
 
               {/* Título central: ahora con más espacio respecto al arco, igual que en Inicio */}
               <div className="absolute left-1/2 top-[30%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">Consejo Municipal de Innovación<br />y Emprendimiento</div>
