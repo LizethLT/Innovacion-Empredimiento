@@ -1,7 +1,25 @@
 'use client'
 
 import { useState, useEffect, type FormEvent } from 'react'
-import { Mail, Clock, MessageSquare, CheckCircle } from 'lucide-react'
+import { Mail, Clock, MessageSquare, CheckCircle, Bell } from 'lucide-react'
+
+// Ejemplo de noticias con sus respectivos enlaces o IDs únicos
+const mockNews = [
+  {
+    id: '1',
+    title: 'Proyecto plantea la creación del Observatorio Municipal de Innovación',
+    link: '#noticia-1', // O la URL completa de la noticia
+    date: '13 de agosto de 2026',
+    category: 'ACTUALIDAD'
+  },
+  {
+    id: '2',
+    title: 'Tarija apuesta por el futuro: presentan anteproyecto de ley para impulsar la innovación',
+    link: '#noticia-2',
+    date: '12 de agosto de 2026',
+    category: 'ACTUALIDAD'
+  }
+]
 
 export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -11,13 +29,28 @@ export default function Contact() {
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [isSubscribed, setIsSubscribed] = useState(false)
 
-  // Verificar si ya se había suscrito previamente en este navegador
+  // Estado para llevar el control de las noticias vistas por el usuario
+  const [viewedNews, setViewedNews] = useState<string[]>([])
+
+  // Cargar estados guardados en el navegador al iniciar
   useEffect(() => {
     const savedSubscription = localStorage.getItem('news_subscribed')
     if (savedSubscription === 'true') {
       setIsSubscribed(true)
     }
+
+    const savedViewedNews = JSON.parse(localStorage.getItem('viewed_news') || '[]')
+    setViewedNews(savedViewedNews)
   }, [])
+
+  // Función para marcar una noticia como vista al hacer clic en ella
+  const handleViewNews = (newsId: string) => {
+    if (!viewedNews.includes(newsId)) {
+      const updatedViewed = [...viewedNews, newsId]
+      setViewedNews(updatedViewed)
+      localStorage.setItem('viewed_news', JSON.stringify(updatedViewed))
+    }
+  }
 
   const contactMethods = [
     {
@@ -89,7 +122,7 @@ export default function Contact() {
 
       setNewsStatus('sent')
       setIsSubscribed(true)
-      localStorage.setItem('news_subscribed', 'true') // Guarda el estado en el navegador
+      localStorage.setItem('news_subscribed', 'true')
       setNewsEmail('')
     } catch (error) {
       setNewsStatus('error')
@@ -99,6 +132,51 @@ export default function Contact() {
   return (
     <section id="contacto" className="py-20 px-4 bg-gradient-to-br from-[#F8F1E7] to-white">
       <div className="max-w-6xl mx-auto">
+        
+        {/* Sección de Demostración de Noticias con Notificación Dinámica */}
+        <div className="mb-16">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-2xl font-bold text-[#1E1E1E]">Noticias y Actualidad</h3>
+              <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
+            </div>
+            {/* Indicador global si hay alguna noticia sin leer */}
+            {mockNews.some(n => !viewedNews.includes(n.id)) && (
+              <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
+                <Bell size={14} /> Tienes nuevas noticias
+              </span>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {mockNews.map((news) => {
+              const isNew = !viewedNews.includes(news.id) // Solo es true si el usuario NO la ha abierto
+
+              return (
+                <div key={news.id} className="relative bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-md transition-all">
+                  {/* Etiqueta de notificación de noticia nueva */}
+                  {isNew && (
+                    <span className="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                      ¡NUEVA!
+                    </span>
+                  )}
+                  <span className="text-xs font-bold text-[#7A1F2B]">{news.category}</span>
+                  <span className="text-xs text-gray-400 ml-3">{news.date}</span>
+                  <h4 className="font-bold text-[#1E1E1E] mt-2 mb-4">{news.title}</h4>
+                  
+                  <a
+                    href={news.link}
+                    onClick={() => handleViewNews(news.id)} // Al hacer clic, se registra como vista y no vuelve a salir la alerta
+                    className="inline-block px-4 py-2 bg-[#5B0F18] text-white text-xs font-semibold rounded-lg hover:bg-[#7A1F2B] transition-colors"
+                  >
+                    Ver noticia
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="space-y-4 mb-16">
           <h2 className="text-4xl font-bold text-[#1E1E1E]">Contacto</h2>
           <p className="text-lg text-gray-600 max-w-3xl">
