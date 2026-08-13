@@ -20,10 +20,6 @@ const mockNews = [
   }
 ]
 
-// Cuánto tiempo (en ms) se mantiene visible el aviso de "nuevas noticias"
-// antes de marcarlas automáticamente como vistas. Ajustable a gusto.
-const AUTO_MARK_AS_READ_DELAY = 4000
-
 export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [phone, setPhone] = useState('')
@@ -32,11 +28,15 @@ export default function Contact() {
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [isSubscribed, setIsSubscribed] = useState(false)
 
-  const [viewedNews, setViewedNews] = useState<string[]>([])
+  // IDs que llegaron sin marcar como vistas AL MOMENTO DE ENTRAR a esta
+  // sesión/carga de página. Es lo que controla qué se muestra como "nueva"
+  // durante esta visita — no se vuelve a leer de localStorage después,
+  // así que no hay ningún ciclo que prenda y apague el aviso solo.
+  const [newUnreadIds, setNewUnreadIds] = useState<string[]>([])
+  const [showBadge, setShowBadge] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    // Confirmamos que estamos en el cliente y cargamos el almacenamiento local de golpe
     setIsClient(true)
 
     const savedSubscription = localStorage.getItem('news_subscribed')
@@ -45,39 +45,24 @@ export default function Contact() {
     }
 
     const savedViewedNews: string[] = JSON.parse(localStorage.getItem('viewed_news') || '[]')
-    setViewedNews(savedViewedNews)
 
-    // Si hay noticias que el usuario todavía no vio, le mostramos el aviso
-    // (la campanita con el contador) y, pasado un tiempo, las marcamos
-    // automáticamente como vistas. Así el aviso solo depende de "entrar a
-    // la sección", no de hacer clic en "Ver noticia".
     const unreadIds = mockNews
       .map((n) => n.id)
       .filter((id) => !savedViewedNews.includes(id))
 
-    if (unreadIds.length > 0) {
-      const timer = setTimeout(() => {
-        setViewedNews((prev) => {
-          const updated = Array.from(new Set([...prev, ...unreadIds]))
-          localStorage.setItem('viewed_news', JSON.stringify(updated))
-          return updated
-        })
-      }, AUTO_MARK_AS_READ_DELAY)
+    // Guardamos qué era nuevo para ESTA visita (así el aviso y el tag
+    // "¡NUEVA!" se ven en esta carga aunque ya quedemos marcando abajo).
+    setNewUnreadIds(unreadIds)
+    setShowBadge(unreadIds.length > 0)
 
-      return () => clearTimeout(timer)
+    // Se marca como vista de una, sin delays ni timers: la próxima vez
+    // que entre, esa noticia ya no va a figurar como no vista.
+    if (unreadIds.length > 0) {
+      const allIds = mockNews.map((n) => n.id)
+      const updated = Array.from(new Set([...savedViewedNews, ...allIds]))
+      localStorage.setItem('viewed_news', JSON.stringify(updated))
     }
   }, [])
-
-  // Se mantiene por si además querés marcarla como vista al tocar el link
-  // (por ejemplo, si el usuario hace clic antes de que pase el delay).
-  const handleViewNews = (newsId: string) => {
-    setViewedNews((prev) => {
-      if (prev.includes(newsId)) return prev
-      const updated = [...prev, newsId]
-      localStorage.setItem('viewed_news', JSON.stringify(updated))
-      return updated
-    })
-  }
 
   const contactMethods = [
     {
@@ -169,7 +154,7 @@ export default function Contact() {
             </div>
 
             {/* Si no es cliente, no renderizamos nada temporalmente para evitar parpadeo */}
-            {isClient && mockNews.some(n => !viewedNews.includes(n.id)) && (
+            {isClient && showBadge && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
                 <Bell size={14} /> Tienes nuevas noticias
               </span>
@@ -190,7 +175,7 @@ export default function Contact() {
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
               {mockNews.map((news) => {
-                const isNew = !viewedNews.includes(news.id)
+                const isNew = newUnreadIds.includes(news.id)
 
                 return (
                   <div key={news.id} className="relative bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-md transition-all">
@@ -205,7 +190,6 @@ export default function Contact() {
 
                     <a
                       href={news.link}
-                      onClick={() => handleViewNews(news.id)}
                       className="inline-block px-4 py-2 bg-[#5B0F18] text-white text-xs font-semibold rounded-lg hover:bg-[#7A1F2B] transition-colors"
                     >
                       Ver noticia
