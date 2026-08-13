@@ -29,13 +29,10 @@ export default function Contact() {
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [isSubscribed, setIsSubscribed] = useState(false)
 
-  // Estados para controlar las noticias vistas y evitar problemas de hidratación (parpadeo)
   const [viewedNews, setViewedNews] = useState<string[]>([])
   const [isMounted, setIsMounted] = useState(false)
 
-  // Cargar estados guardados en el navegador solo al montar el componente
   useEffect(() => {
-    setIsMounted(true)
     const savedSubscription = localStorage.getItem('news_subscribed')
     if (savedSubscription === 'true') {
       setIsSubscribed(true)
@@ -43,9 +40,11 @@ export default function Contact() {
 
     const savedViewedNews = JSON.parse(localStorage.getItem('viewed_news') || '[]')
     setViewedNews(savedViewedNews)
+    
+    // Marcamos como montado una vez leído el localStorage
+    setIsMounted(true)
   }, [])
 
-  // Función para marcar una noticia como vista al hacer clic en ella
   const handleViewNews = (newsId: string) => {
     if (!viewedNews.includes(newsId)) {
       const updatedViewed = [...viewedNews, newsId]
@@ -142,7 +141,8 @@ export default function Contact() {
               <h3 className="text-2xl font-bold text-[#1E1E1E]">Noticias y Actualidad</h3>
               <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
             </div>
-            {/* Indicador global que solo aparece si el componente ya montó y hay noticias sin leer */}
+            
+            {/* Solo se muestra si ya se montó y hay noticias reales sin leer */}
             {isMounted && mockNews.some(n => !viewedNews.includes(n.id)) && (
               <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
                 <Bell size={14} /> Tienes nuevas noticias
@@ -152,7 +152,7 @@ export default function Contact() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {mockNews.map((news) => {
-              // Si aún no monta el componente, ocultamos la etiqueta para evitar saltos visuales
+              // Si no ha montado, ocultamos la etiqueta para evitar el parpadeo de renderizado
               const isNew = isMounted && !viewedNews.includes(news.id)
 
               return (
