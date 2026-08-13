@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowUpLeft, ArrowUpRight, Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users, X, Book, FileText, Gavel } from 'lucide-react'
+import { ArrowUp, Building2, Briefcase, Eye, GraduationCap, Handshake, Lightbulb, MapPin, Target, Users, X, Book, FileText, Gavel } from 'lucide-react'
 import { articles, getArticleByRange } from '@/lib/articles'
 
 const ITEMS = [
@@ -193,12 +193,20 @@ export default function InteractiveEcosystem() {
                   haciendo que las flechas aparecieran mucho más abajo de lo esperado, cerca
                   del título. Usar íconos posicionados por porcentaje evita ese problema y
                   además permite hacerlos más grandes y centrarlos mejor en desktop. */}
-              <span className="absolute left-[41%] top-[6%] flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-[#fbe4e2] sm:top-[7%] sm:h-10 sm:w-10">
-                <ArrowUpLeft aria-hidden="true" className="h-5 w-5 text-[#8c2432] sm:h-6 sm:w-6" />
-              </span>
-              <span className="absolute right-[41%] top-[6%] flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full bg-[#fbe4e2] sm:top-[7%] sm:h-10 sm:w-10">
-                <ArrowUpRight aria-hidden="true" className="h-5 w-5 text-[#8c2432] sm:h-6 sm:w-6" />
-              </span>
+              {/* Línea + flecha que sale desde el título y apunta hacia cada botón de arriba */}
+              <div className="absolute left-[39%] top-[9%] h-[20%] w-px origin-top -rotate-[18deg] bg-[#c77d80]" />
+              <ArrowUp
+                aria-hidden="true"
+                style={{ transform: 'rotate(-18deg)' }}
+                className="absolute left-[39%] top-[7%] h-5 w-5 -translate-x-1/2 text-[#8c2432] sm:h-6 sm:w-6"
+              />
+
+              <div className="absolute right-[39%] top-[9%] h-[20%] w-px origin-top rotate-[18deg] bg-[#c77d80]" />
+              <ArrowUp
+                aria-hidden="true"
+                style={{ transform: 'rotate(18deg)' }}
+                className="absolute right-[39%] top-[7%] h-5 w-5 translate-x-1/2 text-[#8c2432] sm:h-6 sm:w-6"
+              />
 
               {/* Título central: ahora con más espacio respecto al arco, igual que en Inicio */}
               <div className="absolute left-1/2 top-[30%] w-full -translate-x-1/2 text-center text-sm font-bold leading-5 text-[#241f20] sm:text-base">Consejo Municipal de Innovación<br />y Emprendimiento</div>
