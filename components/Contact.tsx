@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, type FormEvent } from 'react'
-import { Mail, Clock, MessageSquare, CheckCircle, Bell } from 'lucide-react'
-import { useNotifications } from '@/context/NotificationContext' // ⚠️ ajustá esta ruta a donde tengas el archivo
+import { useState, type FormEvent } from 'react'
+import { Mail, Clock, MessageSquare, CheckCircle } from 'lucide-react'
 
 export default function Contact() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -11,42 +10,6 @@ export default function Contact() {
   const [newsEmail, setNewsEmail] = useState('')
   const [newsStatus, setNewsStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [isSubscribed, setIsSubscribed] = useState(false)
-
-  const { noticias, viewedNoticias, markAllAsViewed } = useNotifications()
-
-  const [isClient, setIsClient] = useState(false)
-  // IDs que estaban sin ver AL MOMENTO de entrar a esta visita. Se calcula
-  // una sola vez (ver flag markedThisVisit) y no se vuelve a recalcular,
-  // así el aviso no aparece/desaparece con cada poll del contexto.
-  const [newUnreadIds, setNewUnreadIds] = useState<string[]>([])
-  const [markedThisVisit, setMarkedThisVisit] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-    const savedSubscription = localStorage.getItem('news_subscribed')
-    if (savedSubscription === 'true') {
-      setIsSubscribed(true)
-    }
-  }, [])
-
-  // Esperamos a tener la lista real de noticias (del contexto) y a saber
-  // qué se había visto antes; recién ahí calculamos "qué es nuevo para
-  // esta visita" y lo marcamos como visto. Con markedThisVisit evitamos
-  // que se repita cuando el contexto vuelva a hacer polling.
-  useEffect(() => {
-    if (!isClient || markedThisVisit || noticias.length === 0) return
-
-    const unreadIds = noticias
-      .map((n) => n.id)
-      .filter((id) => !viewedNoticias.has(id))
-
-    setNewUnreadIds(unreadIds)
-    setMarkedThisVisit(true)
-
-    if (unreadIds.length > 0) {
-      markAllAsViewed(unreadIds)
-    }
-  }, [isClient, noticias, viewedNoticias, markedThisVisit, markAllAsViewed])
 
   const contactMethods = [
     {
@@ -128,63 +91,6 @@ export default function Contact() {
   return (
     <section id="contacto" className="py-20 px-4 bg-gradient-to-br from-[#F8F1E7] to-white">
       <div className="max-w-6xl mx-auto">
-
-        {/* Sección de Noticias */}
-        <div className="mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-2xl font-bold text-[#1E1E1E]">Noticias y Actualidad</h3>
-              <p className="text-sm text-gray-600">Informes, convocatorias y avances institucionales</p>
-            </div>
-
-            {/* Si no es cliente, no renderizamos nada temporalmente para evitar parpadeo */}
-            {isClient && newUnreadIds.length > 0 && (
-              <span className="flex items-center gap-1 bg-[#7A1F2B] text-white text-xs px-3 py-1.5 rounded-full animate-pulse font-semibold">
-                <Bell size={14} /> Tienes {newUnreadIds.length} noticia{newUnreadIds.length > 1 ? 's' : ''} nueva{newUnreadIds.length > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-
-          {/* Renderizado condicional estricto: bloquea el HTML hasta que el cliente carge los datos reales */}
-          {!isClient || noticias.length === 0 ? (
-            <div className="grid md:grid-cols-2 gap-6 min-h-[180px]">
-              {/* Esqueleto de carga: 2 placeholders mientras isClient=false o mientras
-                  el contexto todavía no trajo noticias reales de /api/noticias */}
-              {[0, 1].map((i) => (
-                <div key={i} className="bg-white border border-[#D8A7A7] rounded-lg p-6 opacity-60">
-                  <span className="text-xs font-bold text-gray-300">ACTUALIDAD</span>
-                  <h4 className="font-bold text-gray-300 mt-2 mb-4">Cargando...</h4>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-6">
-              {noticias.map((news) => {
-                const isNew = newUnreadIds.includes(news.id)
-
-                return (
-                  <div key={news.id} className="relative bg-white border border-[#D8A7A7] rounded-lg p-6 hover:shadow-md transition-all">
-                    {isNew && (
-                      <span className="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                        ¡NUEVA!
-                      </span>
-                    )}
-                    <span className="text-xs font-bold text-[#7A1F2B]">{news.category}</span>
-                    <span className="text-xs text-gray-400 ml-3">{news.date}</span>
-                    <h4 className="font-bold text-[#1E1E1E] mt-2 mb-4">{news.title}</h4>
-
-                    <a
-                      href={news.link}
-                      className="inline-block px-4 py-2 bg-[#5B0F18] text-white text-xs font-semibold rounded-lg hover:bg-[#7A1F2B] transition-colors"
-                    >
-                      Ver noticia
-                    </a>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
 
         <div className="space-y-4 mb-16">
           <h2 className="text-4xl font-bold text-[#1E1E1E]">Contacto</h2>
