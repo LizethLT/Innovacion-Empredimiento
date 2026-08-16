@@ -268,15 +268,18 @@ const CONCEJAL_MODAL_HIGHLIGHT = {
 
 const SUPPORTERS = [
   { id: 'apoyo-1', name: 'Institución 1', logo: '/logos/oficina del concejal.png' },
-  { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/Logo Tarija Dialoga.png' },
-  { id: 'apoyo-3', name: 'Institución 3', logo: '/logos/concejo municipal tarija.jpeg' },
-  { id: 'apoyo-4', name: 'Institución 4', logo: '/logos/institucion-4.png' },
-  { id: 'apoyo-5', name: 'Institución 5', logo: '/logos/institucion-5.png' },
-  { id: 'apoyo-6', name: 'Institución 6', logo: '/logos/institucion-6.png' },
-  { id: 'apoyo-7', name: 'Institución 7', logo: '/logos/institucion-7.png' },
-  { id: 'apoyo-8', name: 'Institución 8', logo: '/logos/institucion-8.png' },
-  { id: 'apoyo-9', name: 'Institución 9', logo: '/logos/institucion-9.png' },
-  { id: 'apoyo-10', name: 'Institución 10', logo: '/logos/institucion-10.png' },
+  { id: 'apoyo-2', name: 'Institución 2', logo: '/logos/concejo municipal tarija.jpeg' },
+  { id: 'apoyo-3', name: 'Institución 3', logo: '/logos/esperanza bolivia.png' },
+  { id: 'apoyo-4', name: 'Institución 4', logo: '/logos/LOGO FAUTAPO.png' },
+  { id: 'apoyo-5', name: 'Institución 5', logo: '/logos/ECOSIES TARIJA.png' },
+  { id: 'apoyo-6', name: 'Institución 6', logo: '/logos/Logo Tarija Dialoga.png' },
+  { id: 'apoyo-7', name: 'Institución 7', logo: '/logos/aniv.png' },
+  { id: 'apoyo-8', name: 'Institución 8', logo: '/logos/federacion de empresarios.png' },
+  { id: 'apoyo-9', name: 'Institución 9', logo: '/logos/nativa.png' },
+  { id: 'apoyo-10', name: 'Institución 10', logo: '/logos/avina.png' },
+  { id: 'apoyo-10', name: 'Institución 11', logo: '/logos/comebol.png' },
+  { id: 'apoyo-10', name: 'Institución 12', logo: '/logos/UPDS.png' },
+  { id: 'apoyo-10', name: 'Institución 13', logo: '/logos/cropped-logo-UCB.png' },
 ]
 
 function renderOverviewArticleContent(content: string) {
