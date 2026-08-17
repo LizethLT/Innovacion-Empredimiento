@@ -25,7 +25,8 @@ interface NotificationContextType {
 }
 
 const STORAGE_KEY = 'viewedNoticias'
-
+// 5s era demasiado agresivo (generaba parpadeos). Con 1 min alcanza de sobra
+// para detectar noticias nuevas sin recargar la página.
 const POLL_INTERVAL_MS = 60000
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -60,7 +61,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setViewedNoticias(loadViewedIds())
   }, [])
 
-
+  // El polling SOLO actualiza la lista de noticias. Nunca toca
+  // viewedNoticias, así que no hay ningún ciclo que se retroalimente
+  // (antes: cambiar viewedNoticias -> refetch -> podía volver a cambiar
+  // el conteo -> nuevo render -> parpadeo).
   useEffect(() => {
     const fetchNoticias = () => {
       fetch('/api/noticias')
