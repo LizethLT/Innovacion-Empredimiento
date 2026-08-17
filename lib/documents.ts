@@ -16,25 +16,25 @@ export interface LibraryDocument {
  * correspondiente a /public/docs/ con el nombre indicado en `file`.
  */
 export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
+   {
+    id: 'reglamento',
+    title: 'Agenda Impulsa Tarija',
+    description: 'Normas técnicas para la ejecución de la Ley',
+    type: 'PDF',
+    date: '2026',
+    pages: '8 páginas',
+    category: 'Leyes', 
+    file: '/docs/Agenda.pdf',
+  },
   {
     id: 'ley-completa',
     title: 'Ley Municipal Completa',
     description: 'Texto íntegro de la Ley Municipal de Innovación',
     type: 'PDF',
     date: '2026',
-    pages: '28 páginas',
+    pages: '52 páginas',
     category: 'Leyes', // <-- Aquí asignas la categoría
     file: '/docs/Ley Innovacion y emprendedurismo.pdf',
-  },
-  {
-    id: 'reglamento',
-    title: 'Agenda Impulsa Tarija',
-    description: 'Normas técnicas para la ejecución de la Ley',
-    type: 'PDF',
-    date: '2026',
-    pages: '15 páginas',
-    category: 'Leyes', 
-    file: '/docs/Agenda.pdf',
   },
   /*{
     id: 'plan-estrategico',
