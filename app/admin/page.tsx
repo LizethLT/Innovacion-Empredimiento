@@ -68,6 +68,7 @@ export default function AdminPage() {
     setTipo(n.tipo)
     setImagenUrl(n.imagen_url || '')
     setImagenFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -192,13 +193,39 @@ export default function AdminPage() {
             <label className="block text-sm font-medium mb-1">
               Imagen (archivo)
             </label>
+            {/* Input oculto que maneja la selección del archivo */}
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={(e) => setImagenFile(e.target.files?.[0] || null)}
-              className="w-full text-sm"
+              className="hidden"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-[#7A1F2B] text-white text-sm px-4 py-2 rounded-md hover:bg-[#5B0F18] transition"
+              >
+                Seleccionar archivo
+              </button>
+              <span className="text-sm text-gray-500 truncate">
+                {imagenFile ? imagenFile.name : 'Ningún archivo seleccionado'}
+              </span>
+              {imagenFile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagenFile(null)
+                    if (fileInputRef.current) fileInputRef.current.value = ''
+                  }}
+                  className="text-xs text-red-600 underline hover:text-red-800"
+                >
+                  Quitar
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
               O pega una URL de imagen externa en vez de subir un archivo:
             </p>
             <input
