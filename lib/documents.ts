@@ -19,7 +19,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
    {
     id: 'reglamento',
     title: 'Agenda Impulsa Tarija',
-    description: 'Normas técnicas para la ejecución de la Ley',
+    description: 'Una agenda para impulsar la innovación, el talento y el desarrollo de Tarija.',
     type: 'PDF',
     date: '2026',
     pages: '8 páginas',
