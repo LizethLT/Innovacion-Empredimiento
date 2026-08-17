@@ -15,15 +15,45 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { titulo, descripcion, link, tipo } = await req.json()
+    const formData = await req.formData()
+    const titulo = formData.get('titulo')?.toString()
+    const descripcion = formData.get('descripcion')?.toString() || null
+    const link = formData.get('link')?.toString()
+    const tipo = formData.get('tipo')?.toString() || 'noticia'
+    const imagenUrlExterna = formData.get('imagen_url')?.toString() || null
+    const imagenFile = formData.get('imagen') as File | null
 
     if (!titulo || !link) {
       return NextResponse.json({ error: 'Título y link son obligatorios' }, { status: 400 })
     }
 
+    let imagen_url = imagenUrlExterna
+
+    // Si subieron un archivo de imagen, lo subimos a Supabase Storage
+    if (imagenFile && imagenFile.size > 0) {
+      const fileExt = imagenFile.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `noticias/${fileName}`
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('imagenes') // Asegúrate de que este sea el nombre de tu bucket en Supabase
+        .upload(filePath, imagenFile)
+
+      if (uploadError) {
+        throw new Error('Error al subir la imagen: ' + uploadError.message)
+      }
+
+      // Obtener la URL pública de la imagen
+      const { data: publicURLData } = supabaseAdmin.storage
+        .from('imagenes')
+        .getPublicUrl(filePath)
+
+      imagen_url = publicURLData.publicUrl
+    }
+
     const { data, error } = await supabaseAdmin
       .from('noticias')
-      .insert({ titulo, descripcion, link, tipo: tipo || 'noticia' })
+      .insert({ titulo, descripcion, link, tipo, imagen_url })
       .select()
       .single()
 
@@ -32,9 +62,9 @@ export async function POST(req: NextRequest) {
     await notificarSuscriptores({ titulo, descripcion, link })
 
     return NextResponse.json({ message: 'Noticia publicada y notificada', noticia: data })
-  } catch (err) {
+  } catch (err: any) {
     console.error(err)
-    return NextResponse.json({ error: 'No se pudo publicar la noticia' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'No se pudo publicar la noticia' }, { status: 500 })
   }
 }
 
@@ -49,6 +79,69 @@ export async function GET() {
   }
 
   return NextResponse.json({ noticias: data })
+}
+
+export async function PUT(req: NextRequest) {
+  if (!(await estaAutenticado())) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  const id = req.nextUrl.searchParams.get('id')
+  if (!id) {
+    return NextResponse.json({ error: 'Falta el id de la noticia' }, { status: 400 })
+  }
+
+  try {
+    const formData = await req.formData()
+    const titulo = formData.get('titulo')?.toString()
+    const descripcion = formData.get('descripcion')?.toString() || null
+    const link = formData.get('link')?.toString()
+    const tipo = formData.get('tipo')?.toString() || 'noticia'
+    const imagenUrlExterna = formData.get('imagen_url')?.toString() || null
+    const imagenFile = formData.get('imagen') as File | null
+
+    if (!titulo || !link) {
+      return NextResponse.json({ error: 'Título y link son obligatorios' }, { status: 400 })
+    }
+
+    let updateData: any = { titulo, descripcion, link, tipo }
+
+    if (imagenFile && imagenFile.size > 0) {
+      const fileExt = imagenFile.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `noticias/${fileName}`
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('imagenes')
+        .upload(filePath, imagenFile)
+
+      if (uploadError) {
+        throw new Error('Error al subir la nueva imagen: ' + uploadError.message)
+      }
+
+      const { data: publicURLData } = supabaseAdmin.storage
+        .from('imagenes')
+        .getPublicUrl(filePath)
+
+      updateData.imagen_url = publicURLData.publicUrl
+    } else if (imagenUrlExterna !== null) {
+      updateData.imagen_url = imagenUrlExterna
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('noticias')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ message: 'Noticia actualizada', noticia: data })
+  } catch (err: any) {
+    console.error(err)
+    return NextResponse.json({ error: err.message || 'No se pudo actualizar la noticia' }, { status: 500 })
+  }
 }
 
 export async function DELETE(req: NextRequest) {
