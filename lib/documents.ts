@@ -28,7 +28,7 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
   },
   {
     id: 'ley-completa',
-    title: 'Ley Municipal Completa',
+    title: 'Ley Innovacion y Emprendedurismo COMPLETA',
     description: 'Texto íntegro de la Ley Municipal de Innovación',
     type: 'PDF',
     date: '2026',
