@@ -26,17 +26,17 @@ export const LIBRARY_DOCUMENTS: LibraryDocument[] = [
     category: 'Leyes', // <-- Aquí asignas la categoría
     file: '/docs/Ley Innovacion y emprendedurismo.pdf',
   },
-  /*{
+  {
     id: 'reglamento',
-    title: 'Reglamento de Implementación',
+    title: 'Agenda Impulsa Tarija',
     description: 'Normas técnicas para la ejecución de la Ley',
     type: 'PDF',
     date: '2024',
     pages: '15 páginas',
-    category: 'Leyes', // <-- Aquí asignas la categoría
-    file: '/docs/reglamento-de-implementacion.pdf',
+    category: 'Leyes', 
+    file: '/docs/Agenda.pdf',
   },
-  {
+  /*{
     id: 'plan-estrategico',
     title: 'Plan Estratégico 2024-2028',
     description: 'Estrategia municipal de innovación a mediano plazo',
