@@ -1,328 +1,215 @@
 'use client'
 
-import { useEffect, useState, useRef, FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 
-type Noticia = {
+interface Noticia {
   id: string
   titulo: string
   descripcion: string | null
   link: string
   tipo: string
-  imagen_url: string | null
   created_at: string
 }
 
-const TIPOS = ['noticia', 'evento', 'comunicado']
-
 export default function AdminPage() {
-  const [noticias, setNoticias] = useState<Noticia[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [authenticated, setAuthenticated] = useState(false)
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
 
-  // Estado del formulario (crear o editar)
-  const [editId, setEditId] = useState<string | null>(null)
   const [titulo, setTitulo] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [link, setLink] = useState('')
   const [tipo, setTipo] = useState('noticia')
-  const [imagenUrl, setImagenUrl] = useState('')
-  const [imagenFile, setImagenFile] = useState<File | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
-  async function cargarNoticias() {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/noticias')
-      const text = await res.text()
-      const data = text ? JSON.parse(text) : {}
-      if (!res.ok) throw new Error(data.error || 'Error al cargar noticias')
-      setNoticias(data.noticias || [])
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+  const [noticias, setNoticias] = useState<Noticia[]>([])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const cargarNoticias = async () => {
+    const res = await fetch('/api/admin/noticias')
+    if (res.ok) {
+      const data = await res.json()
+      setNoticias(data.noticias ?? [])
     }
   }
 
   useEffect(() => {
-    cargarNoticias()
-  }, [])
+    if (authenticated) cargarNoticias()
+  }, [authenticated])
 
-  function limpiarFormulario() {
-    setEditId(null)
-    setTitulo('')
-    setDescripcion('')
-    setLink('')
-    setTipo('noticia')
-    setImagenUrl('')
-    setImagenFile(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  function iniciarEdicion(n: Noticia) {
-    setEditId(n.id)
-    setTitulo(n.titulo)
-    setDescripcion(n.descripcion || '')
-    setLink(n.link)
-    setTipo(n.tipo)
-    setImagenUrl(n.imagen_url || '')
-    setImagenFile(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  async function handleSubmit(e: FormEvent) {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
-    setSaving(true)
-    setError(null)
-
-    try {
-      const formData = new FormData()
-      formData.append('titulo', titulo)
-      formData.append('descripcion', descripcion)
-      formData.append('link', link)
-      formData.append('tipo', tipo)
-      if (imagenFile) {
-        formData.append('imagen', imagenFile)
-      } else if (imagenUrl) {
-        formData.append('imagen_url', imagenUrl)
-      }
-
-      const url = editId ? `/api/noticias?id=${editId}` : '/api/noticias'
-      const method = editId ? 'PUT' : 'POST'
-
-      const res = await fetch(url, { method, body: formData })
-      
-      // Manejo seguro de la respuesta para evitar Unexpected end of JSON input
-      const text = await res.text()
-      const data = text ? JSON.parse(text) : {}
-
-      if (!res.ok) throw new Error(data.error || 'Error al guardar')
-
-      limpiarFormulario()
-      await cargarNoticias()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setSaving(false)
+    setLoginError('')
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+    if (res.ok) {
+      setAuthenticated(true)
+    } else {
+      setLoginError('Contraseña incorrecta')
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return
-    setError(null)
+  const handlePublicar = async (e: FormEvent) => {
+    e.preventDefault()
+    setStatus('sending')
     try {
-      const res = await fetch(`/api/noticias?id=${id}`, { method: 'DELETE' })
-      const text = await res.text()
-      const data = text ? JSON.parse(text) : {}
-      if (!res.ok) throw new Error(data.error || 'Error al eliminar')
-      await cargarNoticias()
-    } catch (err: any) {
-      setError(err.message)
+      const res = await fetch('/api/admin/noticias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo, descripcion, link, tipo }),
+      })
+      if (!res.ok) throw new Error()
+      setStatus('sent')
+      setTitulo('')
+      setDescripcion('')
+      setLink('')
+      cargarNoticias()
+    } catch {
+      setStatus('error')
     }
+  }
+
+  const handleEliminar = async (id: string) => {
+    if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return
+    setDeletingId(id)
+    try {
+      const res = await fetch(`/api/admin/noticias?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      setNoticias((prev) => prev.filter((n) => n.id !== id))
+    } catch {
+      alert('No se pudo eliminar la noticia. Intenta de nuevo.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F1E7] px-4">
+        <form
+          onSubmit={handleLogin}
+          className="bg-white border border-[#D8A7A7] rounded-lg p-8 w-full max-w-sm space-y-4"
+        >
+          <h1 className="text-xl font-bold text-[#1E1E1E]">Panel de Noticias</h1>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Contraseña"
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
+            required
+          />
+          {loginError && <p className="text-sm text-red-700">{loginError}</p>}
+          <button
+            type="submit"
+            className="w-full px-4 py-2 bg-[#5B0F18] text-white font-semibold rounded-lg hover:bg-[#1E1E1E] transition-colors"
+          >
+            Entrar
+          </button>
+        </form>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F1E7] text-[#1E1E1E] px-6 py-10">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-[#5B0F18] mb-6">
-          Administración de noticias
-        </h1>
+    <div className="min-h-screen bg-[#F8F1E7] px-4 py-12">
+      <form
+        onSubmit={handlePublicar}
+        className="bg-white border border-[#D8A7A7] rounded-lg p-8 max-w-xl mx-auto space-y-4"
+      >
+        <h1 className="text-2xl font-bold text-[#1E1E1E]">Publicar noticia</h1>
 
-        {error && (
-          <div className="mb-6 rounded-md border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm">
-            {error}
-          </div>
-        )}
+        <div>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Título</label>
+          <input
+            type="text"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
+          />
+        </div>
 
-        {/* Formulario de creación / edición */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-lg shadow-sm border border-[#D8A7A7]/40 p-6 mb-10 space-y-4"
+        <div>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Descripción</label>
+          <textarea
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            rows={3}
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Link (video o noticia)</label>
+          <input
+            type="url"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            required
+            placeholder="https://..."
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Tipo</label>
+          <select
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E]"
+          >
+            <option value="noticia">Noticia</option>
+            <option value="video">Video</option>
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          disabled={status === 'sending'}
+          className="w-full px-4 py-2 bg-gradient-to-r from-[#5B0F18] to-[#7A1F2B] text-white font-semibold rounded-lg disabled:opacity-60"
         >
-          <h2 className="text-lg font-semibold text-[#7A1F2B]">
-            {editId ? 'Editar noticia' : 'Nueva noticia'}
-          </h2>
+          {status === 'sending' ? 'Publicando y notificando...' : 'Publicar y notificar'}
+        </button>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Título *</label>
-            <input
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              required
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5B0F18]"
-            />
-          </div>
+        {status === 'sent' && (
+          <p className="text-sm font-semibold text-green-700">
+            ¡Noticia publicada y suscriptores notificados!
+          </p>
+        )}
+        {status === 'error' && (
+          <p className="text-sm font-semibold text-red-700">
+            Hubo un error al publicar. Intenta de nuevo.
+          </p>
+        )}
+      </form>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Descripción</label>
-            <textarea
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              rows={3}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5B0F18]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Link *</label>
-            <input
-              type="url"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-              required
-              placeholder="https://..."
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5B0F18]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Tipo</label>
-            <select
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#5B0F18]"
-            >
-              {TIPOS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Imagen (archivo)
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImagenFile(e.target.files?.[0] || null)}
-              className="hidden"
-            />
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-[#7A1F2B] text-white text-sm px-4 py-2 rounded-md hover:bg-[#5B0F18] transition"
-              >
-                Seleccionar archivo
-              </button>
-              <span className="text-sm text-gray-500 truncate">
-                {imagenFile ? imagenFile.name : 'Ningún archivo seleccionado'}
-              </span>
-              {imagenFile && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImagenFile(null)
-                    if (fileInputRef.current) fileInputRef.current.value = ''
-                  }}
-                  className="text-xs text-red-600 underline hover:text-red-800"
-                >
-                  Quitar
-                </button>
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              O pega una URL de imagen externa en vez de subir un archivo:
-            </p>
-            <input
-              type="url"
-              value={imagenUrl}
-              onChange={(e) => setImagenUrl(e.target.value)}
-              placeholder="https://..."
-              disabled={!!imagenFile}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 mt-1 disabled:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#5B0F18]"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-[#5B0F18] text-white px-5 py-2 rounded-md hover:bg-[#7A1F2B] transition disabled:opacity-50"
-            >
-              {saving ? 'Guardando...' : editId ? 'Guardar cambios' : 'Publicar noticia'}
-            </button>
-            {editId && (
-              <button
-                type="button"
-                onClick={limpiarFormulario}
-                className="px-5 py-2 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-              >
-                Cancelar edición
-              </button>
-            )}
-          </div>
-        </form>
-
-        {/* Listado de noticias */}
-        <h2 className="text-lg font-semibold text-[#7A1F2B] mb-4">
-          Noticias publicadas
-        </h2>
-
-        {loading ? (
-          <p className="text-sm text-gray-500">Cargando...</p>
-        ) : noticias.length === 0 ? (
-          <p className="text-sm text-gray-500">Todavía no hay noticias.</p>
+      <div className="max-w-xl mx-auto mt-8 space-y-3">
+        <h2 className="text-lg font-bold text-[#1E1E1E]">Noticias publicadas</h2>
+        {noticias.length === 0 ? (
+          <p className="text-sm text-gray-600">Todavía no hay noticias publicadas.</p>
         ) : (
-          <div className="space-y-3">
-            {noticias.map((n) => (
-              <div
-                key={n.id}
-                className="bg-white rounded-lg border border-[#D8A7A7]/40 p-4 flex gap-4 items-start"
-              >
-                {n.imagen_url && (
-                  <img
-                    src={n.imagen_url}
-                    alt={n.titulo}
-                    className="w-20 h-20 object-cover rounded-md flex-shrink-0"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium truncate">{n.titulo}</h3>
-                    <span className="text-xs bg-[#D8A7A7]/30 text-[#5B0F18] px-2 py-0.5 rounded-full">
-                      {n.tipo}
-                    </span>
-                  </div>
-                  {n.descripcion && (
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                      {n.descripcion}
-                    </p>
-                  )}
-                  <a
-                    href={n.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[#7A1F2B] underline mt-1 inline-block truncate max-w-full"
-                  >
-                    {n.link}
-                  </a>
-                </div>
-                <div className="flex flex-col gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => iniciarEdicion(n)}
-                    className="text-xs px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-50"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(n.id)}
-                    className="text-xs px-3 py-1 rounded-md border border-red-300 text-red-600 hover:bg-red-50"
-                  >
-                    Eliminar
-                  </button>
-                </div>
+          noticias.map((noticia) => (
+            <div
+              key={noticia.id}
+              className="bg-white border border-[#D8A7A7] rounded-lg p-4 flex items-center justify-between gap-4"
+            >
+              <div>
+                <p className="font-semibold text-[#1E1E1E]">{noticia.titulo}</p>
+                <p className="text-xs text-gray-600">{noticia.tipo === 'video' ? 'Video' : 'Noticia'}</p>
               </div>
-            ))}
-          </div>
+              <button
+                onClick={() => handleEliminar(noticia.id)}
+                disabled={deletingId === noticia.id}
+                className="px-3 py-2 bg-red-700 text-white text-sm font-semibold rounded-lg hover:bg-red-800 disabled:opacity-60 shrink-0"
+              >
+                {deletingId === noticia.id ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          ))
         )}
       </div>
     </div>
