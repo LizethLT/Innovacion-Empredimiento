@@ -18,24 +18,25 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const titulo = formData.get('titulo')?.toString()
     const descripcion = formData.get('descripcion')?.toString() || null
-    const enlace = formData.get('link')?.toString() || formData.get('enlace')?.toString()
+    const link = formData.get('link')?.toString()
     const tipo = formData.get('tipo')?.toString() || 'noticia'
     const imagenUrlExterna = formData.get('imagen_url')?.toString() || null
     const imagenFile = formData.get('imagen') as File | null
 
-    if (!titulo || !enlace) {
-      return NextResponse.json({ error: 'Título y enlace son obligatorios' }, { status: 400 })
+    if (!titulo || !link) {
+      return NextResponse.json({ error: 'Título y link son obligatorios' }, { status: 400 })
     }
 
     let imagen_url = imagenUrlExterna
 
+    // Si subieron un archivo de imagen, lo subimos a Supabase Storage
     if (imagenFile && imagenFile.size > 0) {
       const fileExt = imagenFile.name.split('.').pop()
       const fileName = `${Date.now()}.${fileExt}`
       const filePath = `noticias/${fileName}`
 
       const { error: uploadError } = await supabaseAdmin.storage
-        .from('imagenes') // Si tu bucket tiene otro nombre, cámbialo aquí
+        .from('imagenes')
         .upload(filePath, imagenFile)
 
       if (uploadError) {
@@ -51,14 +52,15 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabaseAdmin
       .from('noticias')
-      .insert({ titulo, descripcion, enlace, tipo, imagen_url })
+      .insert({ titulo, descripcion, link, tipo, imagen_url })
       .select()
       .single()
 
     if (error) throw error
 
+    // Intentamos notificar, pero si falla no detiene la respuesta de éxito
     try {
-      await notificarSuscriptores({ titulo, descripcion: descripcion || '', link: enlace })
+      await notificarSuscriptores({ titulo, descripcion: descripcion || '', link })
     } catch (emailErr) {
       console.error('Error al enviar notificaciones:', emailErr)
     }
@@ -74,10 +76,9 @@ export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('noticias')
     .select('*')
-    .order('creado_en', { ascending: false })
+    .order('created_at', { ascending: false })
 
   if (error) {
-    console.error(error)
     return NextResponse.json({ error: 'No se pudieron cargar las noticias' }, { status: 500 })
   }
 
@@ -98,16 +99,16 @@ export async function PUT(req: NextRequest) {
     const formData = await req.formData()
     const titulo = formData.get('titulo')?.toString()
     const descripcion = formData.get('descripcion')?.toString() || null
-    const enlace = formData.get('link')?.toString() || formData.get('enlace')?.toString()
+    const link = formData.get('link')?.toString()
     const tipo = formData.get('tipo')?.toString() || 'noticia'
     const imagenUrlExterna = formData.get('imagen_url')?.toString() || null
     const imagenFile = formData.get('imagen') as File | null
 
-    if (!titulo || !enlace) {
-      return NextResponse.json({ error: 'Título y enlace son obligatorios' }, { status: 400 })
+    if (!titulo || !link) {
+      return NextResponse.json({ error: 'Título y link son obligatorios' }, { status: 400 })
     }
 
-    let updateData: any = { titulo, descripcion, enlace, tipo }
+    let updateData: any = { titulo, descripcion, link, tipo }
 
     if (imagenFile && imagenFile.size > 0) {
       const fileExt = imagenFile.name.split('.').pop()
