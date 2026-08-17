@@ -8,10 +8,10 @@ interface Noticia {
   id: string
   titulo: string
   descripcion: string | null
-  link: string
+  enlace: string
   tipo: string
   imagen_url: string | null
-  created_at: string
+  creado_en: string
 }
 
 function formatFecha(fecha: string) {
@@ -105,7 +105,6 @@ export default function Noticias() {
                     className="group relative flex flex-col justify-between rounded-[2rem] bg-white p-7 shadow-[0_10px_30px_rgba(61,1,3,0.06)] ring-1 ring-black/[0.04] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(61,1,3,0.12)] overflow-hidden"
                   >
                     <div>
-                      {/* Imagen de la noticia si existe */}
                       {noticia.imagen_url && (
                         <div className="relative -mx-7 -mt-7 mb-5 h-48 w-[calc(100%+3.5rem)] overflow-hidden bg-gray-100">
                           <img
@@ -128,7 +127,7 @@ export default function Noticias() {
 
                         <div className="flex items-center gap-1 text-[11px] font-medium text-[#9c8e8b]">
                           <CalendarDays size={12} aria-hidden="true" />
-                          <span>{formatFecha(noticia.created_at)}</span>
+                          <span>{formatFecha(noticia.creado_en)}</span>
                         </div>
                       </div>
 
@@ -145,7 +144,7 @@ export default function Noticias() {
 
                     <div className="mt-8 flex items-center justify-between border-t border-[#f4edea] pt-4">
                       <a
-                        href={noticia.link}
+                        href={noticia.enlace}
                         target="_blank"
                         rel="noreferrer"
                         onClick={() => markAsViewed(noticia.id)}
@@ -160,7 +159,7 @@ export default function Noticias() {
                       </a>
 
                       <a
-                        href={noticia.link}
+                        href={noticia.enlace}
                         target="_blank"
                         rel="noreferrer"
                         onClick={() => markAsViewed(noticia.id)}
