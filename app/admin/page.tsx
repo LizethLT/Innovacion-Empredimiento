@@ -1,217 +1,194 @@
-'use client'
+import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 
-import { useState, useEffect, type FormEvent } from 'react'
+// Usa la service_role key, NO la anon/public key: esta ruta corre en el
+// servidor y necesita permisos para insertar/actualizar sin las
+// restricciones de RLS.
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
-interface Noticia {
-  id: string
-  titulo: string
-  descripcion: string | null
-  link: string
-  tipo: string
-  created_at: string
+const BUCKET = 'noticias-imagenes'
+const TABLE = 'noticias'
+
+// Límite de tamaño: 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+function validarImagen(file: File) {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El archivo debe ser una imagen')
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('La imagen no puede superar los 5MB')
+  }
 }
 
-export default function AdminPage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [password, setPassword] = useState('')
-  const [loginError, setLoginError] = useState('')
+async function subirImagen(file: File): Promise<string> {
+  validarImagen(file)
 
-  const [titulo, setTitulo] = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [link, setLink] = useState('')
-  const [tipo, setTipo] = useState('noticia')
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const extension = file.name.split('.').pop() || 'jpg'
+  const fileName = `${randomUUID()}.${extension}`
 
-  const [noticias, setNoticias] = useState<Noticia[]>([])
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { error } = await supabase.storage.from(BUCKET).upload(fileName, file, {
+    contentType: file.type,
+    upsert: false,
+  })
 
-  const cargarNoticias = async () => {
-    const res = await fetch('/api/admin/noticias')
-    if (res.ok) {
-      const data = await res.json()
-      setNoticias(data.noticias ?? [])
+  if (error) {
+    throw new Error(`No se pudo subir la imagen: ${error.message}`)
+  }
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
+  return data.publicUrl
+}
+
+// Borra una imagen anterior del bucket a partir de su URL pública.
+// No lanza error si falla: es una limpieza best-effort.
+async function borrarImagenAnterior(imagenUrl: string | null | undefined) {
+  if (!imagenUrl) return
+  try {
+    const fileName = imagenUrl.split(`/${BUCKET}/`).pop()
+    if (fileName) {
+      await supabase.storage.from(BUCKET).remove([fileName])
     }
+  } catch {
+    // Si falla el borrado, no interrumpimos el flujo principal
+  }
+}
+
+// GET: listar noticias (para el panel de admin y para Contact.tsx / NotificationContext)
+export async function GET() {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  useEffect(() => {
-    if (authenticated) cargarNoticias()
-  }, [authenticated])
+  return NextResponse.json({ noticias: data })
+}
 
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault()
-    setLoginError('')
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    })
-    if (res.ok) {
-      setAuthenticated(true)
-    } else {
-      setLoginError('Contraseña incorrecta')
+// POST: crear noticia nueva
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData()
+
+    const titulo = formData.get('titulo') as string
+    const descripcion = (formData.get('descripcion') as string) || null
+    const link = formData.get('link') as string
+    const tipo = (formData.get('tipo') as string) || 'noticia'
+    const imagenFile = formData.get('imagen') as File | null
+    const imagenUrlExterna = (formData.get('imagen_url') as string) || null
+
+    if (!titulo || !link) {
+      return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
     }
-  }
 
-  const handlePublicar = async (e: FormEvent) => {
-    e.preventDefault()
-    setStatus('sending')
-    try {
-      const res = await fetch('/api/admin/noticias', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo, descripcion, link, tipo }),
-      })
-      if (!res.ok) throw new Error()
-      setStatus('sent')
-      setTitulo('')
-      setDescripcion('')
-      setLink('')
-      cargarNoticias()
-    } catch {
-      setStatus('error')
+    let imagen_url: string | null = imagenUrlExterna
+
+    // Si subieron un archivo, tiene prioridad sobre una URL externa
+    if (imagenFile && imagenFile.size > 0) {
+      imagen_url = await subirImagen(imagenFile)
     }
-  }
 
-  const handleEliminar = async (id: string) => {
-    if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return
-    setDeletingId(id)
-    try {
-      const res = await fetch(`/api/admin/noticias?id=${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
-      setNoticias((prev) => prev.filter((n) => n.id !== id))
-    } catch {
-      alert('No se pudo eliminar la noticia. Intenta de nuevo.')
-    } finally {
-      setDeletingId(null)
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({ titulo, descripcion, link, tipo, imagen_url })
+      .select()
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // TODO: acá va tu lógica existente para notificar a los suscriptores
+    // por email (Resend), usando la tabla `suscriptores`.
+
+    return NextResponse.json({ noticia: data })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message ?? 'Error inesperado' }, { status: 500 })
+  }
+}
+
+// PUT: editar una noticia existente (?id=...)
+export async function PUT(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get('id')
+    if (!id) {
+      return NextResponse.json({ error: 'Falta el id' }, { status: 400 })
+    }
+
+    const formData = await req.formData()
+    const titulo = formData.get('titulo') as string
+    const descripcion = (formData.get('descripcion') as string) || null
+    const link = formData.get('link') as string
+    const tipo = (formData.get('tipo') as string) || 'noticia'
+    const imagenFile = formData.get('imagen') as File | null
+    const imagenUrlExterna = formData.get('imagen_url') as string | null
+
+    const updateData: Record<string, any> = { titulo, descripcion, link, tipo }
+
+    if (imagenFile && imagenFile.size > 0) {
+      // Trae la noticia actual para poder borrar su imagen vieja
+      const { data: noticiaActual } = await supabase
+        .from(TABLE)
+        .select('imagen_url')
+        .eq('id', id)
+        .single()
+
+      updateData.imagen_url = await subirImagen(imagenFile)
+
+      if (noticiaActual?.imagen_url) {
+        await borrarImagenAnterior(noticiaActual.imagen_url)
+      }
+    } else if (imagenUrlExterna) {
+      updateData.imagen_url = imagenUrlExterna
+    }
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ noticia: data })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message ?? 'Error inesperado' }, { status: 500 })
+  }
+}
+
+// DELETE: eliminar una noticia (?id=...)
+export async function DELETE(req: NextRequest) {
+  const id = req.nextUrl.searchParams.get('id')
+  if (!id) {
+    return NextResponse.json({ error: 'Falta el id' }, { status: 400 })
   }
 
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F1E7] px-4">
-        <form
-          onSubmit={handleLogin}
-          className="bg-white border border-[#D8A7A7] rounded-lg p-8 w-full max-w-sm space-y-4"
-        >
-          <h1 className="text-xl font-bold text-[#1E1E1E]">Panel de Noticias</h1>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
-            required
-          />
-          {loginError && <p className="text-sm text-red-700">{loginError}</p>}
-          <button
-            type="submit"
-            className="w-full px-4 py-2 bg-[#5B0F18] text-white font-semibold rounded-lg hover:bg-[#1E1E1E] transition-colors"
-          >
-            Entrar
-          </button>
-        </form>
-      </div>
-    )
+  // Borra también la imagen asociada del bucket, si existe
+  const { data: noticia } = await supabase
+    .from(TABLE)
+    .select('imagen_url')
+    .eq('id', id)
+    .single()
+
+  if (noticia?.imagen_url) {
+    await borrarImagenAnterior(noticia.imagen_url)
   }
 
-  return (
-    <div className="min-h-screen bg-[#F8F1E7] px-4 py-12">
-      <form
-        onSubmit={handlePublicar}
-        className="bg-white border border-[#D8A7A7] rounded-lg p-8 max-w-xl mx-auto space-y-4"
-      >
-        <h1 className="text-2xl font-bold text-[#1E1E1E]">Publicar noticia</h1>
+  const { error } = await supabase.from(TABLE).delete().eq('id', id)
 
-        <div>
-          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Título</label>
-          <input
-            type="text"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
-          />
-        </div>
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
-        <div>
-          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Descripción</label>
-          <textarea
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            rows={3}
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Link (video o noticia)</label>
-          <input
-            type="url"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            required
-            placeholder="https://..."
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E] placeholder-gray-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-[#1E1E1E] mb-2">Tipo</label>
-          <select
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-            className="w-full px-4 py-2 border border-[#D8A7A7] rounded-lg focus:outline-none focus:border-[#7A1F2B] bg-white text-[#1E1E1E]"
-          >
-            <option value="noticia">Noticia</option>
-            <option value="video">Video</option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          disabled={status === 'sending'}
-          className="w-full px-4 py-2 bg-gradient-to-r from-[#5B0F18] to-[#7A1F2B] text-white font-semibold rounded-lg disabled:opacity-60"
-        >
-          {status === 'sending' ? 'Publicando y notificando...' : 'Publicar y notificar'}
-        </button>
-
-        {status === 'sent' && (
-          <p className="text-sm font-semibold text-green-700">
-            ¡Noticia publicada y suscriptores notificados!
-          </p>
-        )}
-        {status === 'error' && (
-          <p className="text-sm font-semibold text-red-700">
-            Hubo un error al publicar. Intenta de nuevo.
-          </p>
-        )}
-      </form>
-
-      <div className="max-w-xl mx-auto mt-8 space-y-3">
-        <h2 className="text-lg font-bold text-[#1E1E1E]">Noticias publicadas</h2>
-        {noticias.length === 0 ? (
-          <p className="text-sm text-gray-600">Todavía no hay noticias publicadas.</p>
-        ) : (
-          noticias.map((noticia) => (
-            <div
-              key={noticia.id}
-              className="bg-white border border-[#D8A7A7] rounded-lg p-4 flex items-center justify-between gap-4"
-            >
-              <div>
-                <p className="font-semibold text-[#1E1E1E]">{noticia.titulo}</p>
-                <p className="text-xs text-gray-600">{noticia.tipo === 'video' ? 'Video' : 'Noticia'}</p>
-              </div>
-              <button
-                onClick={() => handleEliminar(noticia.id)}
-                disabled={deletingId === noticia.id}
-                className="px-3 py-2 bg-red-700 text-white text-sm font-semibold rounded-lg hover:bg-red-800 disabled:opacity-60 shrink-0"
-              >
-                {deletingId === noticia.id ? 'Eliminando...' : 'Eliminar'}
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  )
+  return NextResponse.json({ ok: true })
 }

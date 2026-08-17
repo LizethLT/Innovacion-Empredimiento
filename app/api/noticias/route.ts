@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
-// Ruta PÚBLICA de solo lectura: cualquiera puede consultarla para ver
-// las noticias, pero no puede publicar ni modificar nada desde aquí
-// (eso solo se puede hacer desde /admin, que sí pide contraseña).
+
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('noticias')

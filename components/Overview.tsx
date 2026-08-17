@@ -277,9 +277,9 @@ const SUPPORTERS = [
   { id: 'apoyo-8', name: 'Institución 8', logo: '/logos/comebol.png' },
   { id: 'apoyo-9', name: 'Institución 9', logo: '/logos/UPDS.png' },
   { id: 'apoyo-10', name: 'Institución 10', logo: '/logos/' },
-  { id: 'apoyo-10', name: 'Institución 11', logo: '/logos/' },
-  { id: 'apoyo-10', name: 'Institución 12', logo: '/logos/' },
-  { id: 'apoyo-10', name: 'Institución 13', logo: '/logos/' },
+  { id: 'apoyo-11', name: 'Institución 11', logo: '/logos/' },
+  { id: 'apoyo-12', name: 'Institución 12', logo: '/logos/' },
+  { id: 'apoyo-13', name: 'Institución 13', logo: '/logos/' },
 ]
 
 function renderOverviewArticleContent(content: string) {
