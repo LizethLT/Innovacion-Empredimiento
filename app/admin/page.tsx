@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useState, useRef, FormEvent } from 'react'
 
 type Noticia = {
   id: string
@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [tipo, setTipo] = useState('noticia')
   const [imagenUrl, setImagenUrl] = useState('')
   const [imagenFile, setImagenFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function cargarNoticias() {
     setLoading(true)
@@ -56,6 +57,7 @@ export default function AdminPage() {
     setTipo('noticia')
     setImagenUrl('')
     setImagenFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function iniciarEdicion(n: Noticia) {
