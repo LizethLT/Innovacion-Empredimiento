@@ -10,6 +10,7 @@ interface Noticia {
   descripcion: string | null
   link: string
   tipo: string
+  imagen_url: string | null
   created_at: string
 }
 
@@ -24,6 +25,7 @@ function formatFecha(fecha: string) {
 function CardSkeleton() {
   return (
     <div className="w-full max-w-sm rounded-[1.5rem] bg-white p-7 shadow-[0_12px_35px_rgba(61,1,3,0.08)]">
+      <div className="h-48 w-full animate-pulse rounded-xl bg-[#f1e6e1] mb-5" />
       <div className="flex items-center justify-between">
         <div className="h-6 w-24 animate-pulse rounded-full bg-[#f1e6e1]" />
         <div className="h-4 w-20 animate-pulse rounded bg-[#f1e6e1]" />
@@ -100,10 +102,21 @@ export default function Noticias() {
                 return (
                   <article
                     key={noticia.id}
-                    className="group relative flex flex-col justify-between rounded-[2rem] bg-white p-7 shadow-[0_10px_30px_rgba(61,1,3,0.06)] ring-1 ring-black/[0.04] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(61,1,3,0.12)]"
+                    className="group relative flex flex-col justify-between rounded-[2rem] bg-white p-7 shadow-[0_10px_30px_rgba(61,1,3,0.06)] ring-1 ring-black/[0.04] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(61,1,3,0.12)] overflow-hidden"
                   >
                     <div>
-                      <div className="flex items-center justify-between gap-2 mb-5">
+                      {/* Imagen de la noticia si existe */}
+                      {noticia.imagen_url && (
+                        <div className="relative -mx-7 -mt-7 mb-5 h-48 w-[calc(100%+3.5rem)] overflow-hidden bg-gray-100">
+                          <img
+                            src={noticia.imagen_url}
+                            alt={noticia.titulo}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between gap-2 mb-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
                             isVideo ? 'bg-[#eaf1fb] text-[#1e4d8c]' : 'bg-[#fbf0ec] text-[#621b27]'
