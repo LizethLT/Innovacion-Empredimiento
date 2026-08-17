@@ -35,7 +35,8 @@ export default function AdminPage() {
     setError(null)
     try {
       const res = await fetch('/api/noticias')
-      const data = await res.json()
+      const text = await res.text()
+      const data = text ? JSON.parse(text) : {}
       if (!res.ok) throw new Error(data.error || 'Error al cargar noticias')
       setNoticias(data.noticias || [])
     } catch (err: any) {
@@ -93,7 +94,10 @@ export default function AdminPage() {
       const method = editId ? 'PUT' : 'POST'
 
       const res = await fetch(url, { method, body: formData })
-      const data = await res.json()
+      
+      // Manejo seguro de la respuesta para evitar Unexpected end of JSON input
+      const text = await res.text()
+      const data = text ? JSON.parse(text) : {}
 
       if (!res.ok) throw new Error(data.error || 'Error al guardar')
 
@@ -111,7 +115,8 @@ export default function AdminPage() {
     setError(null)
     try {
       const res = await fetch(`/api/noticias?id=${id}`, { method: 'DELETE' })
-      const data = await res.json()
+      const text = await res.text()
+      const data = text ? JSON.parse(text) : {}
       if (!res.ok) throw new Error(data.error || 'Error al eliminar')
       await cargarNoticias()
     } catch (err: any) {
@@ -193,7 +198,6 @@ export default function AdminPage() {
             <label className="block text-sm font-medium mb-1">
               Imagen (archivo)
             </label>
-            {/* Input oculto que maneja la selección del archivo */}
             <input
               ref={fileInputRef}
               type="file"

@@ -36,14 +36,13 @@ export async function POST(req: NextRequest) {
       const filePath = `noticias/${fileName}`
 
       const { error: uploadError } = await supabaseAdmin.storage
-        .from('imagenes') // Asegúrate de que este sea el nombre de tu bucket en Supabase
+        .from('imagenes')
         .upload(filePath, imagenFile)
 
       if (uploadError) {
         throw new Error('Error al subir la imagen: ' + uploadError.message)
       }
 
-      // Obtener la URL pública de la imagen
       const { data: publicURLData } = supabaseAdmin.storage
         .from('imagenes')
         .getPublicUrl(filePath)
@@ -59,26 +58,34 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
-    await notificarSuscriptores({ titulo, descripcion, link })
+    // Intentamos notificar, pero si falla, la noticia YA está publicada y no rompe la API
+    try {
+      await notificarSuscriptores({ titulo, descripcion, link })
+    } catch (emailErr) {
+      console.error('Error al enviar notificaciones por correo:', emailErr)
+    }
 
-    return NextResponse.json({ message: 'Noticia publicada y notificada', noticia: data })
+    return NextResponse.json({ message: 'Noticia publicada con éxito', noticia: data })
   } catch (err: any) {
-    console.error(err)
+    console.error('Error en POST /api/noticias:', err)
     return NextResponse.json({ error: err.message || 'No se pudo publicar la noticia' }, { status: 500 })
   }
 }
 
 export async function GET() {
-  const { data, error } = await supabaseAdmin
-    .from('noticias')
-    .select('*')
-    .order('created_at', { ascending: false })
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('noticias')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-  if (error) {
+    if (error) throw error
+
+    return NextResponse.json({ noticias: data })
+  } catch (err: any) {
+    console.error('Error en GET /api/noticias:', err)
     return NextResponse.json({ error: 'No se pudieron cargar las noticias' }, { status: 500 })
   }
-
-  return NextResponse.json({ noticias: data })
 }
 
 export async function PUT(req: NextRequest) {
@@ -139,7 +146,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ message: 'Noticia actualizada', noticia: data })
   } catch (err: any) {
-    console.error(err)
+    console.error('Error en PUT /api/noticias:', err)
     return NextResponse.json({ error: err.message || 'No se pudo actualizar la noticia' }, { status: 500 })
   }
 }
@@ -154,12 +161,14 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Falta el id de la noticia' }, { status: 400 })
   }
 
-  const { error } = await supabaseAdmin.from('noticias').delete().eq('id', id)
+  try {
+    const { error } = await supabaseAdmin.from('noticias').delete().eq('id', id)
 
-  if (error) {
-    console.error(error)
+    if (error) throw error
+
+    return NextResponse.json({ message: 'Noticia eliminada' })
+  } catch (err: any) {
+    console.error('Error en DELETE /api/noticias:', err)
     return NextResponse.json({ error: 'No se pudo eliminar la noticia' }, { status: 500 })
   }
-
-  return NextResponse.json({ message: 'Noticia eliminada' })
 }
