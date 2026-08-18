@@ -23,6 +23,7 @@ import {
 
 const PDF_PATH = '/docs/Ley Innovacion y emprendedurismo FINAL AGOSTO.pdf'
 const PDF_COVER_IMAGE = '/images/portada-ley.png'
+const QR_IMAGE = '/images/qr.jpeg'
 
 const lawInfo = [
   {
@@ -195,6 +196,8 @@ export default function WhatIsLaw() {
   const [selectedBenefitId, setSelectedBenefitId] = useState<string | null>(null)
   const [benefitVisible, setBenefitVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isQrOpen, setIsQrOpen] = useState(false)
+  const [qrVisible, setQrVisible] = useState(false)
 
   const selectedBenefit = benefits.find((b) => b.id === selectedBenefitId) ?? null
 
@@ -218,12 +221,21 @@ export default function WhatIsLaw() {
     window.setTimeout(() => setSelectedBenefitId(null), CLOSE_ANIM_MS)
   }
 
+  const openQr = () => {
+    setIsQrOpen(true)
+    requestAnimationFrame(() => setQrVisible(true))
+  }
+  const closeQr = () => {
+    setQrVisible(false)
+    window.setTimeout(() => setIsQrOpen(false), CLOSE_ANIM_MS)
+  }
+
   useEffect(() => {
-    document.body.style.overflow = isPdfOpen || selectedBenefitId ? 'hidden' : ''
+    document.body.style.overflow = isPdfOpen || selectedBenefitId || isQrOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
-  }, [isPdfOpen, selectedBenefitId])
+  }, [isPdfOpen, selectedBenefitId, isQrOpen])
 
   useEffect(() => {
     if (!selectedBenefitId) return
@@ -231,6 +243,13 @@ export default function WhatIsLaw() {
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [selectedBenefitId])
+
+  useEffect(() => {
+    if (!isQrOpen) return
+    const handleKey = (e: KeyboardEvent) => e.key === 'Escape' && closeQr()
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [isQrOpen])
 
   const pdfModal = (
     <div
@@ -311,50 +330,117 @@ export default function WhatIsLaw() {
     </div>
   ) : null
 
+  const qrModal = (
+    <div
+      className={`fixed inset-0 z-[999] flex items-center justify-center bg-black/70 p-4 transition-opacity duration-150 ${
+        qrVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+      role="dialog"
+      aria-modal="true"
+      onClick={closeQr}
+    >
+      <div
+        className={`relative w-full max-w-xs overflow-hidden rounded-[2rem] bg-white p-8 text-center shadow-2xl transition-all duration-200 ${
+          qrVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={closeQr}
+          aria-label="Cerrar"
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#F8F1E7] text-[#5B0F18] transition hover:bg-[#D8A7A7]/40"
+        >
+          <X size={18} />
+        </button>
+        <p className="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-[#5B0F18]">
+          Escanéalo
+        </p>
+        <h3 className="mt-1 text-lg font-bold text-[#1E1E1E]">Ver el proyecto de Ley</h3>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={QR_IMAGE}
+          alt="Código QR para ver el proyecto de Ley"
+          className="mx-auto mt-5 h-52 w-52 rounded-xl border border-[#D8A7A7] p-2"
+        />
+        <p className="mt-4 text-sm leading-relaxed text-gray-600">
+          Ábrelo directamente desde tu celular apuntando la cámara al código.
+        </p>
+      </div>
+    </div>
+  )
+
   return (
-    <section className="py-20 px-4 bg-white">
+    <section className="relative py-20 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
+        {/* Código QR posicionado en la esquina superior derecha de la sección */}
+        <button
+          type="button"
+          onClick={openQr}
+          aria-label="Ver código QR del proyecto de Ley"
+          className="group absolute -top-4 right-4 z-10 flex flex-col items-center gap-2 rounded-[1.75rem] border-2 border-[#5B0F18] bg-gradient-to-br from-white to-[#F8F1E7] px-4 pb-3 pt-4 shadow-xl transition-transform hover:-translate-y-1 hover:shadow-2xl sm:right-8"
+        >
+          <span className="rounded-full bg-[#5B0F18] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+            Escanéalo
+          </span>
+          <div className="flex h-28 w-28 items-center justify-center rounded-xl border border-[#D8A7A7] bg-white p-1.5 sm:h-36 sm:w-36">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={QR_IMAGE}
+              alt="Código QR para ver el proyecto de Ley"
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <span className="text-[11px] font-semibold text-[#5B0F18] transition group-hover:text-[#7A1F2B]">
+            Ver el proyecto de Ley
+          </span>
+        </button>
+
         <div className="mb-16 grid gap-10 lg:grid-cols-[minmax(0,320px)_1fr] lg:items-center">
-          <button
-            type="button"
-            onClick={openPdf}
-            className="group relative mx-auto block w-full max-w-[280px] focus:outline-none"
-            aria-label="Ver el proyecto de Ley completo"
-          >
-            <div className="relative w-full overflow-hidden rounded-2xl border border-[#D8A7A7] shadow-lg transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl">
-              {PDF_COVER_IMAGE ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={PDF_COVER_IMAGE}
-                  alt="Portada del proyecto de Ley"
-                  className="block h-auto w-full"
-                />
-              ) : (
-                <div className="flex aspect-[3/4] h-full w-full flex-col justify-between bg-gradient-to-br from-[#5B0F18] to-[#7A1F2B] p-6 text-white">
-                  <div className="flex items-center justify-center rounded-xl bg-white/10 p-3">
-                    <ScrollText size={32} aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
-                      Proyecto de Ley Municipal
+          <div className="mx-auto w-full max-w-[280px]">
+            <button
+              type="button"
+              onClick={openPdf}
+              className="group relative block w-full focus:outline-none"
+              aria-label="Ver el proyecto de Ley completo"
+            >
+              <div className="relative w-full overflow-visible rounded-2xl border border-[#D8A7A7] shadow-lg transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl">
+                {PDF_COVER_IMAGE ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={PDF_COVER_IMAGE}
+                    alt="Portada del proyecto de Ley"
+                    className="block h-auto w-full rounded-2xl"
+                  />
+                ) : (
+                  <div className="flex aspect-[3/4] h-full w-full flex-col justify-between rounded-2xl bg-gradient-to-br from-[#5B0F18] to-[#7A1F2B] p-6 text-white">
+                    <div className="flex items-center justify-center rounded-xl bg-white/10 p-3">
+                      <ScrollText size={32} aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+                        Proyecto de Ley Municipal
+                      </p>
+                      <p className="mt-2 text-lg font-bold leading-snug">
+                        Innovación, Creatividad, Emprendimiento y Economía del Conocimiento
+                      </p>
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+                      Municipio de Tarija
                     </p>
-                    <p className="mt-2 text-lg font-bold leading-snug">
-                      Innovación, Creatividad, Emprendimiento y Economía del Conocimiento
-                    </p>
                   </div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
-                    Municipio de Tarija
-                  </p>
+                )}
+
+                {/* Overlay de "ver documento" al pasar el cursor */}
+                <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+                  <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#5B0F18] shadow">
+                    <FileText size={16} aria-hidden="true" />
+                    Ver documento
+                  </span>
                 </div>
-              )}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
-                <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#5B0F18] shadow">
-                  <FileText size={16} aria-hidden="true" />
-                  Ver documento
-                </span>
               </div>
-            </div>
-          </button>
+            </button>
+          </div>
 
           <div className="max-w-4xl">
             <h2 className="text-4xl font-bold text-[#1E1E1E]">¿Qué es esta Ley?</h2>
@@ -440,6 +526,7 @@ export default function WhatIsLaw() {
 
       {isPdfOpen && mounted ? createPortal(pdfModal, document.body) : null}
       {selectedBenefitId && mounted ? createPortal(benefitModal, document.body) : null}
+      {isQrOpen && mounted ? createPortal(qrModal, document.body) : null}
     </section>
   )
 }
