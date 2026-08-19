@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import Header from '@/components/Header'
 import TabLayout from '@/components/TabLayout'
 import Overview from '@/components/Overview'
@@ -12,11 +13,47 @@ import Library from '@/components/Library'
 import Contact from '@/components/Contact'
 import Footer from '@/components/Footer'
 
+// Inicializamos Supabase con tus variables de entorno públicas
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export default function Page() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('inicio')
   const [isOriginModalOpen, setIsOriginModalOpen] = useState(false)
+  const [visitas, setVisitas] = useState<number | null>(null) // Estado para el contador
   const anchorNavRef = useRef(false)
+
+  // Lógica para registrar y obtener visitas al cargar la página principal
+  useEffect(() => {
+    async function registrarVisita() {
+      try {
+        // 1. Obtenemos el total actual de la tabla 'visitas' (fila id = 1)
+        const { data, error } = await supabase
+          .from('visitas')
+          .select('total')
+          .eq('id', 1)
+          .single()
+
+        if (data) {
+          const nuevoTotal = (data.total || 0) + 1
+          setVisitas(nuevoTotal)
+
+          // 2. Actualizamos sumando 1 visita en la base de datos
+          await supabase
+            .from('visitas')
+            .update({ total: nuevoTotal })
+            .eq('id', 1)
+        }
+      } catch (error) {
+        console.error('Error al actualizar el contador de visitas:', error)
+      }
+    }
+
+    registrarVisita()
+  }, [])
 
   const sections = [
     { id: 'inicio', label: 'Inicio' },
@@ -203,6 +240,14 @@ export default function Page() {
       />
 
       <TabLayout tabs={tabs} activeTab={activeSection} onTabChange={handleNavClick} />
+
+      {/* Indicador visual flotante o integrado de visitas */}
+      <div className="bg-gray-50 py-3 text-center border-t border-gray-200 text-sm text-gray-600">
+        <span>👁️ Visitas totales al sitio: </span>
+        <span className="font-bold text-blue-600">
+          {visitas !== null ? visitas.toLocaleString() : 'Cargando...'}
+        </span>
+      </div>
 
       <Footer sections={sections} onNavigate={handleNavClick} />
     </>
